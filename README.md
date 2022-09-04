@@ -6,7 +6,8 @@ Tabela de conteúdos
 <!--ts-->
    * [Objetivos](#Objetivos)
    * [Pré-requisitos](#Pré-requisitos)
-   * [Máquina de Estado Finita](#Máquina-de-Estado-Finita)
+   * [Instruções para Uso](#Instruções-para-Uso)
+   * [Máquina de Estado Finita do Protocolo TFTP](#Máquina-de-Estado-Finita-do-Protocolo-TFTP)
    * [Autores](#Autores)
 <!--te-->
 
@@ -28,6 +29,7 @@ sudo apt update
 
 sudo apt install python3
 ```
+## Instruções para Uso
 
 ## Máquina de Estado Finita do Protocolo TFTP
 
@@ -38,6 +40,10 @@ sudo apt install python3
 <a href="https://github.com/ArthurAnastopulos">
     <img style="border-radius: 50%;" src="https://avatars.githubusercontent.com/u/51097061?v=4" width="100px;" alt=""/><br />
     <sub><b>Arthur Anastopulos dos Santos</b></sub></a><br />
+
+<a href="https://github.com/alanamandim">
+    <img style="border-radius: 50%;" src="https://avatars.githubusercontent.com/u/58298192?v=4" width="100px;" alt=""/><br />
+    <sub><b>Alana Mandim</b></sub></a><br />
 
 <a href="https://github.com/jeffersonbcr">
     <img style="border-radius: 50%;" src="https://avatars.githubusercontent.com/u/58866006?v=4" width="100px;" alt=""/><br />
