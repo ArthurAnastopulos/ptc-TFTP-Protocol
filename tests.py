@@ -7,7 +7,7 @@ if len(sys.argv) == 0:
     logger.info('No argument was passed, exiting test program.')
     sys.exit()
 
-# Capture the arguments needed to use the TFTP test program.
+# Capture os argumentos necessários para usar o programa de teste TFTP.
 try:
     IP_ = sys.argv[1]
     logger.info('IP obtained by argument successfully') 
@@ -52,8 +52,8 @@ if len(sys.argv) >= 6:
         logger.exception('Error. There is no REQUEST passed by argument: \n', Argument)
         sys.exit()
  
- # Start TFTP client class with arguments taken. If REQUEST_ has its opcode = 1 its a RRQ, or if REQUEST_ has its opcode = 2 its a WRQ.
- # Anything else is a invalid REQUEST_ argument, so TFTP Client should throw a error message if another opcode than 1 or 2 should be at the request.
+ # Inicia a classe do cliente TFTP com os argumentos obtidos. Se REQUEST_ tem seu opcode = 1 é um RRQ, ou se REQUEST_ tem seu opcode = 2 é um WRQ.
+ # Qualquer outra coisa é um argumento REQUEST_ inválido, então o Cliente TFTP deve lançar uma mensagem de erro se outro opcode diferente de 1 ou 2 estiver na solicitação.
 CLIENT = clientTftp
 
 if REQUEST_ == 1:
