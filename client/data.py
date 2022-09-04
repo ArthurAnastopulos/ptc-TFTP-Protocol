@@ -4,7 +4,7 @@ from client.message import Message
 
 class Data(Message):
 
-    """Construtor da classe de Data(Herdada da classe Message)
+    """Construtor da classe de Data(Herdada da classe Message) possui um número de bloco e um campo de dados
 
     @param buffer: buffer contendo os dados da messagem
     @param blck: String de Block do pacote

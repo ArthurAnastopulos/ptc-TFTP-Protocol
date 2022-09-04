@@ -2,7 +2,7 @@ from client.message import Message
 
 class Error(Message):
 
-    """Construtor da classe de Error(Herdada da classe Message)
+    """Construtor da classe de Error(Herdada da classe Message) usado para ser reconhecido por algum outro tipo de pacote e seu código de erro é um inteiro indicando a natureza do erro
 
     @param buffer: buffer contendo os dados da messagem
     @param errorCode: Codgio do Erro

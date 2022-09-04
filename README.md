@@ -10,6 +10,13 @@ Tabela de conteúdos
    * [Máquina de Estado Finita do Protocolo TFTP](#Máquina-de-Estado-Finita-do-Protocolo-TFTP)
    * [Autores](#Autores)
 <!--te-->
+## Protocolo TFTP
+É um protocolo de transferência de ficheiros utilizado para transferir pequenos ficheiros entre hosts numa rede que é baseado no modelo cliente-servidor para funcionamento, usa um canal não confiável característico de utilização de envios UDP.
+O protocolo envia cinco tipos de mensagens, sendo elas RRQ,WRQ,DATA,ACK e ERROR todas as mensagens possuem no cabeçalho um OPCODE que é usado para identificação de associação de um pacote.
+
+Algumas transferências começam com um pedido de leitura ou escrita de um arquivo (WRQ, RRQ) e recebem uma resposta positiva, um pacote de confirmação a ser escrito ou o primeiro pacote a ser lido. Geralmente, o pacote de confirmação inclui o número do bloco do pacote de dados de confirmação. Cada pacote está associado a um número de bloco; os números de bloco são consecutivos e começam com 1. Como a resposta positiva a uma solicitação de gravação é um pacote de confirmação, o número do bloco pode ser zero nesse caso específico. Se a resposta for um pacote de erro, a solicitação será rejeitada.
+Para criar uma conexão, cada extremidade da conexão escolhe um TID para usar durante a conexão. Cada pacote possui dois TIDs associados aos endpoints da conexão, o TID de origem e o TID de destino. TID 69 decimal (105 octal) é usado para sua conexão.
+
 
 ## Objetivos
 
@@ -18,7 +25,7 @@ Tabela de conteúdos
 
 ## Pré-requisitos
 
-1. Instalar o progroma cliente e o servidor TFTP:
+1. Instalar o programa cliente e o servidor TFTP:
 ```bash
 sudo apt install tftp atftpd
 ```
@@ -30,6 +37,15 @@ sudo apt update
 sudo apt install python3
 ```
 ## Instruções para Uso
+
+1. Instânciar um objeto do tipo ``ClienteTFTP`` onde o mesmo deve ser construído por meio de passagem de parâmetros de ``IP, PORT, timeout e estado`` e para o manejo do cliente é possível útilizar os métodos:
+- get: Para requisição de leitura
+- put: Para requisição de escrita em um arquivo 
+- __handle_idle: Para mudança de estado ocioso contando com o timeout
+- __handle_connect: Para mudança de estado conectado da comunicação.
+- __handle_rx: Para mudança de estado recebimento da comunicação. 
+- __handle_tx: Para mudança de estado transmissão da comunicação.
+- __handle_end:Para mudança de estado encerramento da comunicação.
 
 ## Máquina de Estado Finita do Protocolo TFTP
 

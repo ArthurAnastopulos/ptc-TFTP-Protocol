@@ -2,7 +2,7 @@ from client.message import Message
 
 class Ack(Message):
 
-    """Construtor da classe de Ack(Herdada da classe Message)
+    """Construtor da classe de Ack(Herdada da classe Message) usado para ser reconhecido pelos pacotes DATA e ERROR
 
     @param buffer: buffer contendo os dados da messagem
     @param blck: String de Block do pacote
