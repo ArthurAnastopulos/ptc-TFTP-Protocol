@@ -54,17 +54,17 @@ if len(sys.argv) >= 6:
  
  # Inicia a classe do cliente TFTP com os argumentos obtidos. Se REQUEST_ tem seu opcode = 1 é um RRQ, ou se REQUEST_ tem seu opcode = 2 é um WRQ.
  # Qualquer outra coisa é um argumento REQUEST_ inválido, então o Cliente TFTP deve lançar uma mensagem de erro se outro opcode diferente de 1 ou 2 estiver na solicitação.
-CLIENT = clientTftp
+CLIENT = clientTftp.ClientTFTP(IP_, PORT_, TIMEOUT_)
 
 if REQUEST_ == 1:
     try:
-        CLIENT.put()
+        CLIENT.put(FILENAME_, MODE_)
     except Exception as Argument:
         logger.exception('Error. Error got while reading using TFTP: \n', Argument)
         sys.exit()  
 elif REQUEST_ == 2:
     try:
-        CLIENT.get()
+        CLIENT.get(FILENAME_, MODE_)
     except Exception as Argument:
         logger.exception('Error. Error got while writing using TFTP: \n', Argument)
         sys.exit()
