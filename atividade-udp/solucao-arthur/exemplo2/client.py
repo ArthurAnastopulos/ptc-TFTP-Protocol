@@ -6,31 +6,33 @@ import socket
 class CallbackRX(poller.Callback):
   
    def __init__(self, tout):
-      poller.Callback.__init__(self, None, tout)
+      poller.Callback.__init__(self, socket_, tout)
  
-   def envia(self):
+   def handle(self):
       data, addr = socket_.recvfrom(1024)
       print("received message from server: %s" % data.decode())
       self.enable_timeout()
       self.reload_timeout()
 
    def handle_timeout(self):
-      print("timeout")
+      print("timeout - CallbackRX")
       self.disable_timeout()        
   
 
 class CallbackTX(poller.Callback):
   
-   def __init__(self, cb):
-      poller.Callback.__init__(self, sys.stdin, 0)
-      self.disable_timeout()
-      self.cb = cb
+   def __init__(self, tout):
+      poller.Callback.__init__(self, sys.stdin, tout)
  
    def handle(self):
       MESSAGE = sys.stdin.readline()
       socket_.sendto(MESSAGE.encode(), (UDP_IP, UDP_PORT))
-      self.cb.envia()
- 
+      self.enable_timeout()
+      self.reload_timeout()
+      
+   def handle_timeout(self):
+      print("timeout - CallbackRX")
+      self.disable_timeout()  
     
       
 ####################################  
@@ -47,7 +49,7 @@ socket_ = socket.socket(socket.AF_INET, # Internet
 
 # instancia um callback
 cb_rx = CallbackRX(5)
-cb_tx = CallbackTX(cb_rx)
+cb_tx = CallbackTX(5)
 
 
 # cria o poller (event loop)
@@ -59,9 +61,3 @@ sched.adiciona(cb_rx)
 
 # entrega o controle pro loop de eventos
 sched.despache()
-
-# while True:
-#     MESSAGE = input("Message: ")
-#     socket_.sendto(MESSAGE.encode(), (UDP_IP, 5005))
-#     data, addr = socket_.recvfrom(1024)
-#     print("received message from server: %s" % data.decode())
