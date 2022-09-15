@@ -3,6 +3,8 @@ from client.request import Request
 from client.data import Data
 from client.ack import Ack
 from client.error import Error
+from pypoller import poller
+from socket import *
 
 """Enumeração dos Estado de Máquina do Cliente TFTP
 Idle - Ocioso, Connect - Conectado, Rx - Recepção, Tx - Transmissão, End - Fim
@@ -14,7 +16,7 @@ class ClientTFTP_States:
     Tx = 3
     End = 4
 
-class ClientTFTP:
+class ClientTFTP(poller.Callback):
     """Construtor do Cliente TFTP
 
     @param ip: String contendo o ip do Cliente
@@ -25,8 +27,20 @@ class ClientTFTP:
         self.__ip = ip
         self.__port = port
         self.__tout = tout
+        self.__socket = socket(AF_INET, SOCK_DGRAM)
+
+        poller.Callback.__init__(self, self.__socket, self.__tout)
+        self._handlers = {ClientTFTP_States.Idle: self.__handle_idle, ClientTFTP_States.Connect: self.__handle_connect, 
+                      ClientTFTP_States.Rx: self.__handle_rx, ClientTFTP_States.Tx: self.__handle_tx, ClientTFTP_States.End: self.__handle_end} # tabela de handlers
         self.__state = ClientTFTP_States.Idle
-    
+
+        self.n = 0
+        self.max_n = 0
+        self.msg_size = 0
+        self.mode = "NetAscii"
+        self.datafile = None
+
+
     """Requisição de leitura do TFTP
     
     @param fname: Nome do Arquivo
@@ -92,3 +106,14 @@ class ClientTFTP:
     def __handle_end(self, msg:Data, tout:bool):
         self.__state = ClientTFTP_States.End
         self._msg = msg
+
+    def handle(self):
+        #recebe mensagem do socket
+        data, (addr, port) = self.__socket.recvfrom(516) # 512 bytes + opcode + block
+        #escrevendo no arquivo
+        #maquina de Estados
+
+    def handle_timeout(self):
+        self.disable_timeout()
+        self.disable()
+        #maquina de estado passar para ociso
