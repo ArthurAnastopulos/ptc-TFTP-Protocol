@@ -100,15 +100,18 @@ class ClientTFTP(poller.Callback):
     """
     def __handle_connect(self, msg:Message):
         #recebe mensagem do socket
-
+        
         #Se for ERROR
-        self.__state = self.__handle_idle
+        if(msg.getopcode()==5):
+            self.__state = self.__handle_idle
 
         #Se Receber um DATA (Significa que é RX)
-        self.__state = self.__handle_rx
+        if(msg.getopcode()==3):
+            self.__state = self.__handle_rx
 
         #Se Receber um ACK (Significa que é TX)
-        self__state = self.__handle_tx
+        if(msg.getopcode()==4):
+            self__state = self.__handle_tx
 
 
     """Mudança de Estado para Recepção
@@ -121,10 +124,17 @@ class ClientTFTP(poller.Callback):
 
         #Se len do Data == 512, continua neste estado
             #envia Ack, incrementa n
-        self.__state = self.__handle_rx
+        if(len(msg)==512):  
+            self.__state = self.__handle_rx
+            #enviar ack
+            #self.__socket.sendto(msg.)
+
+            self.__n+=1
+
 
         #Se len do Data < 512, encerrar
-        self.__state = self.__handle_idle
+        if(len(msg)< 512):
+            self.__state = self.__handle_idle
         
     
     """Mudança de Estado para Transmissão
@@ -138,11 +148,13 @@ class ClientTFTP(poller.Callback):
         #Se houver timeout na espera da resposta, re envia data (mantem estado)
         self.__state = self.__handle_tx
 
-        #Se receber Ack, e ainda tem mais q 512 de tamanho continua no estado
-        self.__state = self.__handle_tx
+        #Se receber Ack(4), e ainda tem mais q 512 de tamanho continua no estado
+        if(msg.getopcode==4 & len(msg)==512):
+            self.__state = self.__handle_tx
 
-        #Se estiver sobrando  mesno que 512
-        self.__state = self.__handle_end
+        #Se estiver sobrando  menos que 512
+        if(len(msg)<512):
+            self.__state = self.__handle_end
         
 
  
@@ -160,7 +172,9 @@ class ClientTFTP(poller.Callback):
 
     def handle(self):
         #recebe mensagem do socket
+       
         data, (addr, port) = self.__socket.recvfrom(516) # 512 bytes + opcode + block
+        #transformar data em objeto mensagem
         self.__state(data)
         #escrevendo no arquivo
         #maquina de Estados
