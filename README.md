@@ -36,9 +36,24 @@ sudo apt update
 
 sudo apt install python3
 ```
+
+3. Caso deseje instalar o Docker para testes, como descrito em sua <a href="https://docs.docker.com/engine/install/ubuntu/">documentação</a>
+
 ## Instruções para Uso
 
-1. Instânciar um objeto do tipo ``ClienteTFTP`` onde o mesmo deve ser construído por meio de passagem de parâmetros de ``IP, PORT, timeout e estado`` e para o manejo do cliente é possível útilizar os métodos:
+1. Utilizar o Dockerfile para instanciar um container como Servidor TFTP, seguida utilizar os comandos abaixo para verificar o IP do Servidor, e iniciar o container com a porta deseja em exposta:
+
+```bash
+docker ps
+
+docker inspect <container ID>
+
+docker inspect <container id> | grep "IPAddress"
+
+docker run -i --expose=<port> <container id> bash
+```
+
+2. Instânciar um objeto do tipo ``ClienteTFTP`` onde o mesmo deve ser construído por meio de passagem de parâmetros de ``IP, PORT, timeout e estado`` e para o manejo do cliente é possível útilizar os métodos:
 - get: Para requisição de leitura
 - put: Para requisição de escrita em um arquivo 
 - __handle_idle: Para mudança de estado ocioso contando com o timeout

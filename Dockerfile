@@ -1,5 +1,5 @@
 # Especificando tipo de image docker
-FROM ubuntu:16.04
+FROM ubuntu:latest
 
 # Atualizando image
 RUN apt-get update
@@ -8,7 +8,7 @@ RUN apt-get update
 RUN sudo apt install tftp atftpd
 
 # Adicionando diretório
-WORKDIR /serverDataTFTP
+WORKDIR /src
 
 # Copiando data clientTFTP para diretório
-COPY /files/ /serverDataTFTP
+COPY /dummy-files/ /src/
