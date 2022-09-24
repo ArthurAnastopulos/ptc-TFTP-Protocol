@@ -12,6 +12,12 @@ class Message:
         else:
             self.__opcode = buffer
 
+    """Obtem o Opcode da Mensagem
+
+    @returns: Retorna o valor do Opcode
+    """
+    def getOpcode(self):
+        return self.__opcode
 
     """Faz a transmissão dos Dados das Mensagens
 
