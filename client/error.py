@@ -1,3 +1,4 @@
+from typing_extensions import Self
 from client.message import Message
 
 class Error(Message):
@@ -29,6 +30,9 @@ class Error(Message):
         if self.__errorCode == 7:
             self.__errMsg = "No such user."                      
 
+
+    def getErrorMsg(self):
+        return self.__errMsg
 
     """Faz a transmissão dos Dados das Mensagens
 

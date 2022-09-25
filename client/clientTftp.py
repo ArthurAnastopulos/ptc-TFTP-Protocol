@@ -1,3 +1,4 @@
+from enum import Enum
 import sys
 from client.message import Message
 from client.request import Request
@@ -105,7 +106,8 @@ class ClientTFTP(poller.Callback):
         
         #Se for ERROR
         if( msg.getOpcode() == 5 ):
-            print( "Error: " + str(msg[3]) )
+            error = Error(5, msg[3])
+            print(error.getErrorMsg())
             self.__state = self.__handle_idle
 
         #Se Receber um DATA (Significa que é RX)
@@ -143,7 +145,14 @@ class ClientTFTP(poller.Callback):
     @param msg: Messagem utilizadas durante a troca de messagem
     @param tout: verifcação de ocorrencia do timeout
     """
-    def __handle_rx(self, msg:Message):
+    def __handle_rx(self, msg:Message):   
+        #Se for ERROR
+        if( msg.getOpcode() == 5 ):
+            error = Error(5, msg[3])
+            print(error.getErrorMsg())
+            self.__state = self.__handle_idle
+        
+
         #Recebe Msg do socket
         data = msg[4:]
         data_block_m = int.from_bytes(msg[2:4],"big")
@@ -203,6 +212,12 @@ class ClientTFTP(poller.Callback):
     @param tout: verifcação de ocorrencia do timeout
     """
     def __handle_end(self, msg:Message):
+        #Se for ERROR
+        if( msg.getOpcode() == 5 ):
+            error = Error(5, msg[3])
+            print(error.getErrorMsg())
+            self.__state = self.__handle_idle
+
         #Para Finalização de RX
         if(msg == None):
             print("Transferencia Concluida")
