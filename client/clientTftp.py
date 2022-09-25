@@ -128,7 +128,15 @@ class ClientTFTP(poller.Callback):
 
         #Se Receber um ACK (Significa que é TX)
         if( msg.getOpcode() == 4 ):
-            self.__state = self.__handle_tx
+            ack_n = msg[2:4]
+            ack_n = int.from_bytes(ack_n, 'big')
+            if (ack_n == 0):
+                sentData = self.__file.read(512)
+                block_n = struct.pack(">H", self.__n)
+                dataMsg = Data(3, block_n, sentData)
+                self.__socket.sendto( dataMsg.serializeMsg(), (self.__ip,self.__port) )
+                self.__state = self.__handle_tx
+
 
     """Mudança de Estado para Recepção
 
@@ -170,19 +178,25 @@ class ClientTFTP(poller.Callback):
     """
     def __handle_tx(self, msg:Message):
         #Recebe Msg do socket
-        #Se houver timeout na espera da resposta, re envia data (mantem estado)
-        self.__state = self.__handle_tx
+        ack_n = msg[2:4]
+        ack_n = int.from_bytes(ack_n, "big")
 
-        #Se receber Ack(4), e ainda tem mais q 512 de tamanho continua no estado
-        if(msg.getOpcode== 4 & len(msg)== 512):
+        if( (ack_n == self.__n) and (self.__n < (self.__max_n - 1)) ):
+            self.__n += 1
+            sendData = self.__file.read(512)
+            block_n = struct.pack(">H", self.__n)
+            dataMsg = Data(3, block_n, sendData)
+            self.__socket.sendto( dataMsg.serializeMsg(), (self.__ip,self.__port) )
             self.__state = self.__handle_tx
-
-        #Se estiver sobrando  menos que 512
-        if(len(msg)<512):
+        elif( ack_n and (self.__n == (self.__max_n - 1) ) ):
+            self.__n += 1
+            sendData = self.__file.read(512)
+            block_n = struct.pack(">H", self.__n)
+            dataMsg = Data(3, block_n, sendData)
+            self.__socket.sendto( dataMsg.serializeMsg(), (self.__ip,self.__port) )
             self.__state = self.__handle_end
         
 
- 
     """Mudança de Estado para Fim
 
     @param msg: Messagem utilizadas durante a troca de messagem
@@ -200,7 +214,14 @@ class ClientTFTP(poller.Callback):
             self.__socket.sendto( sendMsg.serializeMsg(), (self.__ip,self.__port) )
             self.__file.close()
             self.__state = self.__handle_idle
-        #Para Finalização de TX
+        elif( (msg.getOpcode() == 4) and ( msg != None) ):
+            self.__n += 1
+            sendData = self.__file.read(512)
+            block_n = struct.pack(">H", self.__n)
+            dataMsg = Data(3, block_n, sendData)
+            self.__socket.sendto( dataMsg.serializeMsg(), (self.__ip,self.__port) )
+            self.__state = self.__handle_idle
+
 
     def handle(self):
         #recebe mensagem do socket
@@ -218,6 +239,7 @@ class ClientTFTP(poller.Callback):
 
         #maquina de Estados
         self.__state(recvMsg)
+
 
     def handle_timeout(self):
         self.disable_timeout()
