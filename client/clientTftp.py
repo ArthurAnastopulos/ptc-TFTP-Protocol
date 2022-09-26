@@ -232,7 +232,7 @@ class ClientTFTP(poller.Callback):
             self.__file.close()
             self.__state = self.__handle_idle
         elif( ( msg.getOpcode() == 3 ) and ( len(msg.getBuffer()[4:]) ) ):
-            block_n = struct.pack(">H",self.n)
+            block_n = struct.pack(">H",self.__n)
             sendMsg = Ack(4, block_n)
             self.__socket.sendto( sendMsg.serializeMsg(), (self.__ip,self.__port) )
             self.__file.close()
