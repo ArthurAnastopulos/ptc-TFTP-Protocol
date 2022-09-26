@@ -23,6 +23,7 @@ class ClientTFTP(poller.Callback):
         self.__tout = tout
 
         self.__socket = socket(AF_INET, SOCK_DGRAM)
+        poller.Callback.__init__(self, self.__socket, self.__tout)
         self.__state =  self.__handle_idle
 
         self.__n = 0
