@@ -7,7 +7,7 @@ class Message:
     def __init__(self, buffer):
         #Verfica qual o tipo de mensagem foi recebido
         if type(buffer) != int:
-            self.__opcode = buffer[:2]
+            self.__opcode = buffer[1]
             self.__buffer = buffer
         else:
             self.__opcode = buffer
@@ -18,6 +18,9 @@ class Message:
     """
     def getOpcode(self):
         return self.__opcode
+
+    def getBuffer(self):
+        return self.__buffer
 
     """Faz a transmissão dos Dados das Mensagens
 

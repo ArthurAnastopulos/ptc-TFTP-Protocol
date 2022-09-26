@@ -11,7 +11,7 @@ class Data(Message):
     def __init__(self, opcode, block, data):
         if (type(opcode) != int) and (opcode != 3):
             raise Exception("Não foi enviado um Opcode de Data")
-        super().__init__(opcode)
+        self.__opcode = opcode
         self.__block = block
         self.__data = data
         

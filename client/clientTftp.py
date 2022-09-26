@@ -5,7 +5,7 @@ from client.request import Request
 from client.data import Data
 from client.ack import Ack
 from client.error import Error
-from pypoller import poller
+from client.pypoller import poller
 from socket import *
 import os
 import struct
@@ -40,6 +40,7 @@ class ClientTFTP(poller.Callback):
     @param mode: contém o modo de formato, onde pode ser as Strings "netascii", "octet", or "mail"
     """
     def get(self, fname:str, mode:str):
+        print("Get")
         # Envia mensagem de RRQ
         msg = Request(1, fname, mode)
         self.__mode = mode
@@ -66,6 +67,7 @@ class ClientTFTP(poller.Callback):
     @param mode: contém o modo de formato, onde pode ser as Strings "netascii", "octet", or "mail"
     """
     def put(self, fname:str, mode:str):
+        print("Put")
         msg = Request(2, fname, mode)
         self.__mode = mode
         self.__fname = fname
@@ -95,6 +97,7 @@ class ClientTFTP(poller.Callback):
     @param tout: verifcação de ocorrencia do timeout
     """
     def __handle_idle(self, msg:Message):
+        print("Idle")
         self.__state = self.__handle_idle
 
     """Mudança de Estado para Conectando
@@ -103,17 +106,18 @@ class ClientTFTP(poller.Callback):
     @param tout: verifcação de ocorrencia do timeout
     """
     def __handle_connect(self, msg:Message):
+        print("Connect")
         #recebe mensagem do socket
-        
         #Se for ERROR
         if( msg.getOpcode() == 5 ):
-            error = Error(5, msg[3])
+            print("Obteve Erro no Connect")
+            error = Error(5, msg.getBuffer()[3])
             print(error.getErrorMsg())
             self.__state = self.__handle_idle
 
         #Se Receber um DATA (Significa que é RX)
         if(msg.getOpcode() == 3 ):
-            data = msg[4:]
+            data = msg.getBuffer()[4:]
             if(len(data) < 512):
                 block_n = struct.pack(">H",self.__n)
                 sendMsg = Ack(4, block_n)
@@ -131,7 +135,7 @@ class ClientTFTP(poller.Callback):
 
         #Se Receber um ACK (Significa que é TX)
         if( msg.getOpcode() == 4 ):
-            ack_n = msg[2:4]
+            ack_n = msg.getBuffer()[2:4]
             ack_n = int.from_bytes(ack_n, 'big')
             if (ack_n == 0):
                 sentData = self.__file.read(512)
@@ -146,17 +150,18 @@ class ClientTFTP(poller.Callback):
     @param msg: Messagem utilizadas durante a troca de messagem
     @param tout: verifcação de ocorrencia do timeout
     """
-    def __handle_rx(self, msg:Message):   
+    def __handle_rx(self, msg:Message):
+        print("Rx")
         #Se for ERROR
         if( msg.getOpcode() == 5 ):
-            error = Error(5, msg[3])
+            error = Error(5, msg.getBuffer()[3])
             print(error.getErrorMsg())
             self.__state = self.__handle_idle
         
 
         #Recebe Msg do socket
-        data = msg[4:]
-        data_block_m = int.from_bytes(msg[2:4],"big")
+        data = msg.getBuffer()[4:]
+        data_block_m = int.from_bytes(msg.getBuffer()[2:4],"big")
 
         #Se len do Data == 512, continua neste estado
             #envia Ack, incrementa n
@@ -187,8 +192,9 @@ class ClientTFTP(poller.Callback):
     @param tout: verifcação de ocorrencia do timeout
     """
     def __handle_tx(self, msg:Message):
+        print("Tx")
         #Recebe Msg do socket
-        ack_n = msg[2:4]
+        ack_n = msg.getBuffer()[2:4]
         ack_n = int.from_bytes(ack_n, "big")
 
         if( (ack_n == self.__n) and (self.__n < (self.__max_n - 1)) ):
@@ -213,24 +219,25 @@ class ClientTFTP(poller.Callback):
     @param tout: verifcação de ocorrencia do timeout
     """
     def __handle_end(self, msg:Message):
+        print("End")
         #Se for ERROR
         if( msg.getOpcode() == 5 ):
-            error = Error(5, msg[3])
+            error = Error(5, msg.getBuffer()[3])
             print(error.getErrorMsg())
             self.__state = self.__handle_idle
 
         #Para Finalização de RX
-        if(msg == None):
+        if(msg.getBuffer() == None):
             print("Transferencia Concluida")
             self.__file.close()
             self.__state = self.__handle_idle
-        elif( ( msg.getOpcode() == 3 ) and ( len(msg[4:]) ) ):
+        elif( ( msg.getOpcode() == 3 ) and ( len(msg.getBuffer()[4:]) ) ):
             block_n = struct.pack(">H",self.n)
             sendMsg = Ack(4, block_n)
             self.__socket.sendto( sendMsg.serializeMsg(), (self.__ip,self.__port) )
             self.__file.close()
             self.__state = self.__handle_idle
-        elif( (msg.getOpcode() == 4) and ( msg != None) ):
+        elif( (msg.getOpcode() == 4) and ( msg.getBuffer() != None) ):
             self.__n += 1
             sendData = self.__file.read(512)
             block_n = struct.pack(">H", self.__n)
@@ -246,7 +253,8 @@ class ClientTFTP(poller.Callback):
 
         #transformar data em objeto mensagem
         if type(data) is bytes:
-            print( "Recebido Mensagem do " + str(addr) + ":" + str(port) + " = " + data.decode() )
+            print( "Recebido Mensagem do " + str(addr) + ":" + str(port) + " = " )
+            print(data)
             recvMsg = Message(data)
         else:
             print("Mensagem recebida não esta em bytes: " + str(data) )
@@ -258,6 +266,7 @@ class ClientTFTP(poller.Callback):
 
 
     def handle_timeout(self):
+        print("Timeout")
         self.disable_timeout()
         self.disable()
         self.__state = self.__handle_idle

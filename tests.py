@@ -1,6 +1,6 @@
 import sys
 import logging as logger
-# from client import clientTftp
+from client import clientTftp
 
 if len(sys.argv) == 0:
     print('No argument was passed, exiting test program.')
@@ -15,14 +15,14 @@ except Exception as Argument:
     sys.exit()
 
 try:
-    PORT_ = sys.argv[2]
+    PORT_ = int(sys.argv[2])
     print('PORT obtained by argument successfully') 
 except Exception as Argument:
     print('Error. There is no PORT passed by argument: \n', Argument)
     sys.exit()
 
 try:
-    TIMEOUT_ = sys.argv[3]
+    TIMEOUT_ = int(sys.argv[3])
     print('TIMEOUT obtained by argument successfully') 
 except Exception as Argument:
     print('Error. There is no TIMEOUT passed by argument: \n', Argument)
@@ -36,34 +36,27 @@ except Exception as Argument:
     sys.exit()
 
 try:
-    REQUEST_ = sys.argv[5]
+    REQUEST_ = int(sys.argv[5])
     print('REQUEST obtained by argument successfully') 
 except Exception as Argument:
     print('Error. There is no REQUEST passed by argument: \n', Argument)
     sys.exit()
 
 MODE_ = "NetAscii"
-if len(sys.argv) >= 6:
-    try:
-        MODE_ = sys.argv[6]
-        print('MODE obtained by argument successfully') 
-    except Exception as Argument:
-        print('Error. There is no REQUEST passed by argument: \n', Argument)
-        sys.exit()
- 
- # Inicia a classe do cliente TFTP com os argumentos obtidos. Se REQUEST_ tem seu opcode = 1 é um RRQ, ou se REQUEST_ tem seu opcode = 2 é um WRQ.
- # Qualquer outra coisa é um argumento REQUEST_ inválido, então o Cliente TFTP deve lançar uma mensagem de erro se outro opcode diferente de 1 ou 2 estiver na solicitação.
-# CLIENT = clientTftp.ClientTFTP(IP_, PORT_, TIMEOUT_)
+
+# Inicia a classe do cliente TFTP com os argumentos obtidos. Se REQUEST_ tem seu opcode = 1 é um RRQ, ou se REQUEST_ tem seu opcode = 2 é um WRQ.
+# Qualquer outra coisa é um argumento REQUEST_ inválido, então o Cliente TFTP deve lançar uma mensagem de erro se outro opcode diferente de 1 ou 2 estiver na solicitação.
+CLIENT = clientTftp.ClientTFTP(IP_, PORT_, TIMEOUT_)
 
 if REQUEST_ == 1:
     try:
-        CLIENT.put(FILENAME_, MODE_)
+        CLIENT.get(FILENAME_, MODE_)
     except Exception as Argument:
         print('Error. Error got while reading using TFTP: \n', Argument)
         sys.exit()  
 elif REQUEST_ == 2:
     try:
-        CLIENT.get(FILENAME_, MODE_)
+        CLIENT.put(FILENAME_, MODE_)
     except Exception as Argument:
         print('Error. Error got while writing using TFTP: \n', Argument)
         sys.exit()

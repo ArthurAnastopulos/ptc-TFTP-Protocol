@@ -11,7 +11,7 @@ class Request(Message):
     def __init__(self, opcode, fname:str, mode:str):
         if (type(opcode) != int) and (opcode != 1 or opcode != 2):
             raise Exception("Não foi enviado um Opcode de REQUEST")
-        super().__init__(opcode)
+        self.__opcode = opcode
         self.__fname = fname
         if mode.lower() == "netascii" or mode.lower() == "octet" or mode.lower() == "mail": 
             self.__mode = mode.lower()

@@ -1,4 +1,3 @@
-from typing_extensions import Self
 from client.message import Message
 
 class Error(Message):

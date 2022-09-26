@@ -11,7 +11,7 @@ class Ack(Message):
     def __init__(self, opcode, block):
         if (type(opcode) != int) and (opcode != 4):
             raise Exception("Não foi enviado um Opcode de ACK")
-        super().__init__(opcode)
+        self.__opcode = opcode
         self.__block = block
 
     """Faz a transmissão dos Dados das Mensagens
