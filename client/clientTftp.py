@@ -39,7 +39,6 @@ class ClientTFTP(poller.Callback):
     @param mode: contém o modo de formato, onde pode ser as Strings "netascii", "octet", or "mail"
     """
     def get(self, fname:str, mode:str):
-        print("Get")
         # Envia mensagem de RRQ
         msg = Request(1, fname, mode)
         self.__mode = mode
@@ -66,7 +65,6 @@ class ClientTFTP(poller.Callback):
     @param mode: contém o modo de formato, onde pode ser as Strings "netascii", "octet", or "mail"
     """
     def put(self, fname:str, mode:str):
-        print("Put")
         msg = Request(2, fname, mode)
         self.__mode = mode
         self.__fname = fname
@@ -75,7 +73,6 @@ class ClientTFTP(poller.Callback):
         #cria o arquivo para leitura de bytes
         self.__file = open("./" + self.__fname, "rb")
         size = os.path.getsize("./" + self.__fname)
-        print("Tamanho do Arquivo: ", size)
         self.__max_n = 1 + (size/512) #Qtd de vezes q será feito a o enviado
 
         self.__socket.sendto(msg.serializeMsg(), (self.__ip, self.__port))
@@ -96,11 +93,9 @@ class ClientTFTP(poller.Callback):
     @param tout: verifcação de ocorrencia do timeout
     """
     def __handle_connect(self, msg:Message):
-        print("Connect")
         #recebe mensagem do socket
         #Se for ERROR
         if( msg.getOpcode() == 5 ):
-            print("Obteve Erro no Connect")
             error = Error(5, msg.getBuffer()[3])
             print(error.getErrorMsg())
             sys.exit()
@@ -112,7 +107,6 @@ class ClientTFTP(poller.Callback):
                 block_n = struct.pack(">H",self.__n)
                 sendMsg = Ack(4, block_n)
                 self.__socket.sendto( sendMsg.serializeMsg(), (self.__ip,self.__port) )
-                print("Enviado ACK para o Serivodor TFTP")
                 self.__file.write(data) # do Byte 4 em diante é o Data do arquivo
                 self.__state = self.__handle_end
             if(len(data) == 512):
@@ -141,7 +135,6 @@ class ClientTFTP(poller.Callback):
     @param tout: verifcação de ocorrencia do timeout
     """
     def __handle_rx(self, msg:Message):
-        print("Rx")
         #Se for ERROR
         if( msg.getOpcode() == 5 ):
             error = Error(5, msg.getBuffer()[3])
@@ -183,7 +176,6 @@ class ClientTFTP(poller.Callback):
     @param tout: verifcação de ocorrencia do timeout
     """
     def __handle_tx(self, msg:Message):
-        print("Tx")
         #Recebe Msg do socket
         ack_n = msg.getBuffer()[2:4]
         ack_n = int.from_bytes(ack_n, "big")
@@ -210,7 +202,6 @@ class ClientTFTP(poller.Callback):
     @param tout: verifcação de ocorrencia do timeout
     """
     def __handle_end(self, msg:Message):
-        print("End")
         #Se for ERROR
         if( msg.getOpcode() == 5 ):
             error = Error(5, msg.getBuffer()[3])
