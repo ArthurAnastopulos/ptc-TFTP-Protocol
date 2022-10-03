@@ -5,10 +5,18 @@ FROM ubuntu:latest
 RUN apt-get update
 
 # Criando servidor TFTP
-RUN sudo apt install tftp atftpd
+RUN apt-get install xinetd tftpd tftp -y
 
-# Adicionando diretório
-WORKDIR /src
+COPY /tftp /etc/xinetd.d/tftp 
 
-# Copiando data clientTFTP para diretório
-COPY /dummy-files/ /src/
+RUN mkdir /tftpboot
+
+RUN chmod -R 777 /tftpboot
+
+RUN chown -R nobody /tftpboot
+
+RUN service xinetd restart
+
+COPY files-tftp-server/ /tftpboot
+
+

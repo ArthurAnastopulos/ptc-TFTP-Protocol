@@ -1,0 +1,6 @@
+version: "3.9"
+services:
+  tftp:
+    image: ubuntu:latest
+    ports:
+      - "6969:69/udp"
