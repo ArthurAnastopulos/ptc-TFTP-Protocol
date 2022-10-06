@@ -68,20 +68,6 @@ python3 tests.py 127.0.0.1 69 10 teste.txt 1
 python3 tests.py 127.0.0.1 69 10 teste.txt 2
 ```
 
-
-
-2. Utilizar o Dockerfile para instanciar um container como Servidor TFTP, seguida utilizar os comandos abaixo para verificar o IP do Servidor, e iniciar o container com a porta deseja em exposta:
-
-```bash
-docker ps
-
-docker inspect <container ID>
-
-docker inspect <container id> | grep "IPAddress"
-
-docker run -i --expose=<port> <container id> bash
-```
-
 3. Instânciar um objeto do tipo ``ClienteTFTP`` onde o mesmo deve ser construído por meio de passagem de parâmetros de ``IP, PORT, timeout e estado`` e para o manejo do cliente é possível útilizar os métodos:
 - get: Para requisição de leitura
 - put: Para requisição de escrita em um arquivo 
