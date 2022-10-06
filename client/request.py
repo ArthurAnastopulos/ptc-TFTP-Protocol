@@ -9,7 +9,7 @@ class Request(Message):
     @param mode: contém o modo de formato, onde pode ser as Strings "netascii", "octet", or "mail" 
     """
     def __init__(self, opcode, fname:str, mode:str):
-        if (type(opcode) != int) and (opcode != 1 or opcode != 2):
+        if (type(opcode) != int) and (opcode != 1 or opcode != 2) and (type(fname) != str):
             raise Exception("Não foi enviado um Opcode de REQUEST")
         self.__opcode = opcode
         self.__fname = fname
@@ -34,3 +34,6 @@ class Request(Message):
         serial += self.__mode.encode('ascii')
         serial.append(0)
         return serial
+
+
+        

@@ -27,7 +27,23 @@ Para criar uma conexão, cada extremidade da conexão escolhe um TID para usar d
 
 1. Instalar o programa cliente e o servidor TFTP:
 ```bash
-sudo apt install tftp atftpd
+
+sudo apt-get update
+
+sudo apt-get install xinetd tftpd tftp -y
+
+sudo cp /tftp /etc/xinetd.d/tftp 
+
+mkdir /tftpboot
+
+sudo chmod -R 777 /tftpboot
+
+sudo chown -R nobody /tftpboot
+
+sudo service xinetd restart
+
+sudo cp dummy-files/ /tftpboot
+
 ```
 
 2. Instalar as dependências necessárias para a execução do projeto:
@@ -41,7 +57,20 @@ sudo apt install python3
 
 ## Instruções para Uso
 
-1. Utilizar o Dockerfile para instanciar um container como Servidor TFTP, seguida utilizar os comandos abaixo para verificar o IP do Servidor, e iniciar o container com a porta deseja em exposta:
+1. Utilizar métodos <a href="https://github.com/mmsobral-croom/projeto-1-um-protocolo-de-transferencia-de-arquivos-ptc-arthur-jefferson/blob/0e2dbf31fa336adbffae80e14a99b946f9ef97ed/client/clientTftp.py#L41">GET</a> ou <a href="https://github.com/mmsobral-croom/projeto-1-um-protocolo-de-transferencia-de-arquivos-ptc-arthur-jefferson/blob/0e2dbf31fa336adbffae80e14a99b946f9ef97ed/client/clientTftp.py#L67">PUT</a>
+
+- GET : python3 tests.py ``ip-do-servidor`` ``porta-servidor`` ``tempo-de-timeout`` ``nome-do-arquivo`` 1
+```bash
+python3 tests.py 127.0.0.1 69 10 teste.txt 1
+```
+- PUT (é necessário que o arquivo já exista no servidor para poder testar): python3 tests.py ``ip-do-servidor`` ``porta-servidor`` ``tempo-de-timeout`` ``nome-do-arquivo`` 2
+```bash
+python3 tests.py 127.0.0.1 69 10 teste.txt 2
+```
+
+
+
+2. Utilizar o Dockerfile para instanciar um container como Servidor TFTP, seguida utilizar os comandos abaixo para verificar o IP do Servidor, e iniciar o container com a porta deseja em exposta:
 
 ```bash
 docker ps
@@ -53,7 +82,7 @@ docker inspect <container id> | grep "IPAddress"
 docker run -i --expose=<port> <container id> bash
 ```
 
-2. Instânciar um objeto do tipo ``ClienteTFTP`` onde o mesmo deve ser construído por meio de passagem de parâmetros de ``IP, PORT, timeout e estado`` e para o manejo do cliente é possível útilizar os métodos:
+3. Instânciar um objeto do tipo ``ClienteTFTP`` onde o mesmo deve ser construído por meio de passagem de parâmetros de ``IP, PORT, timeout e estado`` e para o manejo do cliente é possível útilizar os métodos:
 - get: Para requisição de leitura
 - put: Para requisição de escrita em um arquivo 
 - __handle_idle: Para mudança de estado ocioso contando com o timeout
