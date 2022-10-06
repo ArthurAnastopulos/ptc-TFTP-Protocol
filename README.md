@@ -42,7 +42,7 @@ sudo chown -R nobody /tftpboot
 
 sudo service xinetd restart
 
-sudo cp files-tftp-server/ /tftpboot
+sudo cp dummy-files/ /tftpboot
 
 ```
 
