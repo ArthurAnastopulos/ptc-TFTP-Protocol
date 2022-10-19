@@ -1,4 +1,4 @@
-<h1 align='center'>Projeto 1 - Protocolo <a href="https://datatracker.ietf.org/doc/html/rfc1350">TFTP</a> Cliente</h1>
+<h1 align='center'>Projeto 1 - Protocolo <a href="https://datatracker.ietf.org/doc/html/rfc1350">TFTP 1.0</a> Cliente</h1>
 <p align="center">Projeto de desenvolvimento de um cliente para o protocolo TFTP</p>
 
 Tabela de conteúdos
@@ -68,14 +68,22 @@ python3 tests.py 127.0.0.1 69 10 teste.txt 1
 python3 tests.py 127.0.0.1 69 10 teste.txt 2
 ```
 
-3. Instânciar um objeto do tipo ``ClienteTFTP`` onde o mesmo deve ser construído por meio de passagem de parâmetros de ``IP, PORT, timeout e estado`` e para o manejo do cliente é possível útilizar os métodos:
-- get: Para requisição de leitura
-- put: Para requisição de escrita em um arquivo 
-- __handle_idle: Para mudança de estado ocioso contando com o timeout
-- __handle_connect: Para mudança de estado conectado da comunicação.
-- __handle_rx: Para mudança de estado recebimento da comunicação. 
-- __handle_tx: Para mudança de estado transmissão da comunicação.
-- __handle_end:Para mudança de estado encerramento da comunicação.
+3. Instânciar um objeto do tipo ``ClienteTFTP`` onde o mesmo deve ser construído por meio de passagem de parâmetros de ``ip-do-servidor, porta-servidor, tempo-de-timeout e método`` e para o manejo do cliente é possível útilizar os métodos:
+- Parâmetro ``1`` para <a href="https://github.com/mmsobral-croom/projeto-1-um-protocolo-de-transferencia-de-arquivos-ptc-arthur-jefferson/blob/0e2dbf31fa336adbffae80e14a99b946f9ef97ed/client/clientTftp.py#L41">GET</a> requisição de leitura
+    - Use os seguintes handlers:
+        - <a href="https://github.com/mmsobral-croom/projeto-1-um-protocolo-de-transferencia-de-arquivos-ptc-arthur-jefferson/blob/950a959a2c9e50cb3aa1e669779031bee22417a2/client/clientTftp.py#L226">handle</a> : Para comunicação entre as classes para comunicação via socket.
+        - <a href="https://github.com/mmsobral-croom/projeto-1-um-protocolo-de-transferencia-de-arquivos-ptc-arthur-jefferson/blob/950a959a2c9e50cb3aa1e669779031bee22417a2/client/clientTftp.py#L245">handle_timeout</a> : Para determinação do tempo para mudança do estado ocioso para outro.
+        - <a href="https://github.com/mmsobral-croom/projeto-1-um-protocolo-de-transferencia-de-arquivos-ptc-arthur-jefferson/blob/950a959a2c9e50cb3aa1e669779031bee22417a2/client/clientTftp.py#L95">__handle_connect</a> : Para mudança de estado conectado da comunicação.
+        - <a href="https://github.com/mmsobral-croom/projeto-1-um-protocolo-de-transferencia-de-arquivos-ptc-arthur-jefferson/blob/950a959a2c9e50cb3aa1e669779031bee22417a2/client/clientTftp.py#L137">__handle_rx</a> : Para mudança de estado recebimento da comunicação. 
+        - <a href="https://github.com/mmsobral-croom/projeto-1-um-protocolo-de-transferencia-de-arquivos-ptc-arthur-jefferson/blob/950a959a2c9e50cb3aa1e669779031bee22417a2/client/clientTftp.py#L204">__handle_end</a> :Para mudança de estado encerramento da comunicação.
+- Parâmetro ``2`` para <a href="https://github.com/mmsobral-croom/projeto-1-um-protocolo-de-transferencia-de-arquivos-ptc-arthur-jefferson/blob/0e2dbf31fa336adbffae80e14a99b946f9ef97ed/client/clientTftp.py#L67">PUT</a> requisição de escrita em um arquivo 
+    - Use os seguintes handlers:
+        - <a href="https://github.com/mmsobral-croom/projeto-1-um-protocolo-de-transferencia-de-arquivos-ptc-arthur-jefferson/blob/950a959a2c9e50cb3aa1e669779031bee22417a2/client/clientTftp.py#L226">handle</a> : Para comunicação entre as classes para comunicação via socket.
+        - <a href="https://github.com/mmsobral-croom/projeto-1-um-protocolo-de-transferencia-de-arquivos-ptc-arthur-jefferson/blob/950a959a2c9e50cb3aa1e669779031bee22417a2/client/clientTftp.py#L245">handle_timeout</a> : Para determinação do tempo para mudança do estado ocioso para outro.
+        - <a href="https://github.com/mmsobral-croom/projeto-1-um-protocolo-de-transferencia-de-arquivos-ptc-arthur-jefferson/blob/950a959a2c9e50cb3aa1e669779031bee22417a2/client/clientTftp.py#L95">__handle_connect</a> : Para mudança de estado conectado da comunicação.
+        - <a href="https://github.com/mmsobral-croom/projeto-1-um-protocolo-de-transferencia-de-arquivos-ptc-arthur-jefferson/blob/950a959a2c9e50cb3aa1e669779031bee22417a2/client/clientTftp.py#L178">__handle_tx</a> : Para mudança de estado transmissão da comunicação.
+        - <a href="https://github.com/mmsobral-croom/projeto-1-um-protocolo-de-transferencia-de-arquivos-ptc-arthur-jefferson/blob/950a959a2c9e50cb3aa1e669779031bee22417a2/client/clientTftp.py#L204">__handle_end</a> :Para mudança de estado encerramento da comunicação.
+
 
 ## Máquina de Estado Finita do Protocolo TFTP
 
