@@ -1,0 +1,66 @@
+syntax = "proto2";
+ 
+package tftp2;
+
+message RRQ {
+    required string fname = 1;
+    required string mode = 2;
+}
+
+message WRQ {
+    required string fname =1;
+    required string mode = 2;    
+}
+
+message DATA {
+    required len message = 1;
+    required len block_n = 2;
+}
+
+message ACK {
+    required len block_n = 1;
+}
+
+message ErrorCode {
+    required int32 errorcode = 1;
+}
+
+message LIST {
+    required string path = 1;
+    oneof answer{
+        FILE file = 1;
+        DIR dir = 2;
+    }    
+}
+message FILE{
+    required string nome = 1;
+    required int32 tamanho = 2;
+}
+
+message DIR{
+    required string nome = 1;
+}
+
+message MKDIR {
+    required string path = 1;
+    required ErrorCode errorCode = 2;
+}
+
+message MOVE {
+    required string nome_orig = 1;
+    required string nome_novo = 2;
+    required ErrorCode errorCode = 3;
+}
+
+message Mensagem {
+	oneof msg{
+		RRQ rrq = 1;
+		WRQ wrq = 2;
+        DATA data = 3;
+        ACK ack = 4;
+        ErrorCode errorCode = 5;
+        LIST list = 6;
+        MKDIR mkdir = 7;
+        MOVE move = 8;
+	}
+}
