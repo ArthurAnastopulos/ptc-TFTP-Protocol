@@ -2,35 +2,57 @@ syntax = "proto2";
  
 package tftp2;
 
+enum Mode{
+	NETASCII = 1;
+	MODE_OCTET = 2;
+	MODE_MAIL = 3;
+}
+
+enum ErrorCode{
+	FILE_NOT_FOUND = 1;
+	ACESS_VIOLATION = 2;
+	DISK_FULL = 3;
+	ILLEGAL_OPERATION = 4;
+	UNKNOWN_TID = 5;
+	FILE_EXISTS = 6;
+	UNKNOWN_SESSION = 7;
+	UNDEFINED = 8;
+}
 message RRQ {
     required string fname = 1;
-    required string mode = 2;
+    required Mode mode = 2;
 }
 
 message WRQ {
-    required string fname =1;
-    required string mode = 2;    
+    required string fname = 1;
+    required Mode mode = 2;    
 }
 
 message DATA {
-    required len message = 1;
-    required len block_n = 2;
+    required bytes message = 1;
+    required int32 block_n = 2;
 }
 
 message ACK {
-    required len block_n = 1;
+    required bytes block_n = 1;
 }
 
-message ErrorCode {
-    required int32 errorcode = 1;
+message Error {
+    required ErrorCode errorcode = 1;
 }
 
 message LIST {
     required string path = 1;
-    oneof answer{
-        FILE file = 1;
-        DIR dir = 2;
-    }    
+      
+}
+message ListResponse{
+	repeated ListItem itens = 1;
+}
+message ListItem{
+	oneof answer{
+		FILE file = 1;
+		DIR dir = 2;
+    	}	  
 }
 message FILE{
     required string nome = 1;
@@ -43,24 +65,23 @@ message DIR{
 
 message MKDIR {
     required string path = 1;
-    required ErrorCode errorCode = 2;
 }
 
 message MOVE {
     required string nome_orig = 1;
-    required string nome_novo = 2;
-    required ErrorCode errorCode = 3;
+    optional string nome_novo = 2;
 }
 
 message Mensagem {
 	oneof msg{
 		RRQ rrq = 1;
 		WRQ wrq = 2;
-        DATA data = 3;
-        ACK ack = 4;
-        ErrorCode errorCode = 5;
-        LIST list = 6;
-        MKDIR mkdir = 7;
-        MOVE move = 8;
+		DATA data = 3;
+		ACK ack = 4;
+		Error error = 5;
+		LIST list = 6;
+		ListResponse list_resp = 7;
+		MKDIR mkdir = 8;
+		MOVE move = 9;
 	}
 }
