@@ -6,6 +6,7 @@ from client.data import Data
 from client.ack import Ack
 from client.error import Error
 from client.pypoller import poller
+from client.protobuf import msg_pb2
 from socket import *
 import os
 import struct
