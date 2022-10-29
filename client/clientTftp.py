@@ -19,7 +19,6 @@ class ClientTFTP(poller.Callback):
     @param port: Inteiro contendo porta do Cliente
     @param tout: Valor do Timeout
     """
-
     def __init__(self, ip: str, port: int, tout: float):
         self.__ip = ip
         self.__port = port
@@ -40,23 +39,25 @@ class ClientTFTP(poller.Callback):
     @param fname: Nome do Arquivo
     @param mode: contém o modo de formato, onde pode ser as Strings "netascii", "octet", or "mail"
     """
-
     def get(self, fname: str, mode: str):
         # Envia mensagem de RRQ
         # fazer codificação de mensagem RRQ
         m = msg_pb2.Mensagem()
         msg = m.rrq
+        self.__fname = fname
         msg.fname = fname
         if (mode.lower() == 'netascii'):
-            msg.mode = m.rrq.mode.netascii
+            msg.mode = 1
         elif (mode.lower() == 'octet'):
-            msg.mode = m.rrq.mode.octet
+            msg.mode = 2
         else:
-            msg.mode = m.rrq.mode.mail
+            msg.mode = 3
 
         # cria o arquivo para escrita de bytes
-        #self.__file = open("./" + self.__fname, "wb" )
-        self.__socket.sendto(msg.SerializeTostring, (self.__ip, self.__port))
+        self.__file = open("./" + self.__fname, "wb" )
+        print("Get")
+        print(msg.SerializeToString())
+        self.__socket.sendto(msg.SerializeToString(), (self.__ip, self.__port))
 
         # Instancia Poller
         self.enable()
@@ -73,25 +74,26 @@ class ClientTFTP(poller.Callback):
     @param fname: Nome do Arquivo
     @param mode: contém o modo de formato, onde pode ser as Strings "netascii", "octet", or "mail"
     """
-
     def put(self, fname: str, mode: str):
         # fazer codificação de mensagem WRQ
         m = msg_pb2.Mensagem()
-        msg = m.rrq
+        msg = m.wrq
+        self.__fname = fname
         msg.fname = fname
         if (mode.lower() == 'netascii'):
-            msg.mode = m.rrq.mode.netascii
+            msg.mode = 1
         elif (mode.lower() == 'octet'):
-            msg.mode = m.rrq.mode.octet
+            msg.mode = 2
         else:
-            msg.mode = m.rrq.mode.mail
+            msg.mode = 3
 
         # cria o arquivo para leitura de bytes
         self.__file = open("./" + self.__fname, "rb")
         size = os.path.getsize("./" + self.__fname)
         self.__max_n = 1 + (size/512)  # Qtd de vezes q será feito a o enviado
-
-        self.__socket.sendto(msg.serializeMsg(), (self.__ip, self.__port))
+        print("Put")
+        print(msg.SerializeToString())
+        self.__socket.sendto(msg.SerializeToString(), (self.__ip, self.__port))
 
         # Instancia Poller
         self.enable()
@@ -108,52 +110,51 @@ class ClientTFTP(poller.Callback):
     @param msg: Messagem utilizadas durante a troca de messagem
     @param tout: verifcação de ocorrencia do timeout
     """
-
-    def __handle_connect(self, msg: Message):
+    def __handle_connect(self, msg ):
         # fazer decodificação de mensagem 
         # Se for ERROR
         #verificar agora o tipo de msg se é Error e verificar enum recebido igual a 5
-        if (msg.getOpcode() == 5): 
-            error = Error(5, msg.getBuffer()[3])
-            print(error.getErrorMsg())
+        if (msg.WhichOneof() == 'error'): 
+            error = msg.errorcode
+            print(error)
             sys.exit()
 
         # Se Receber um DATA (Significa que é RX)
         #verificar agora o tipo de msg se é DATA
-        if (msg.getOpcode() == 3):
-            data = msg.getBuffer()[4:]
+        if (msg.WhichOneof() == 'data'):
+            data = msg.message
             #verificar tamanho do msg.data.block_n < 512
             if (len(data) < 512):
-                block_n = struct.pack(">H", self.__n)
-                sendMsg = Ack(4, block_n)
-                self.__socket.sendto(sendMsg.serializeMsg(),
-                                     (self.__ip, self.__port))
+                block_n = self.__n
+                sendMsg = msg_pb2.Mensagem()
+                sendMsg.ack.block_n = block_n
+                self.__socket.sendto(sendMsg.SerializeToString(), (self.__ip, self.__port))
                 # do Byte 4 em diante é o Data do arquivo
                 self.__file.write(data)
                 self.__state = self.__handle_end
             #verificar tamanho do msg.data.block_n < 512    
             if (len(data) == 512):
-                block_n = struct.pack(">H", self.__n)
-                sendMsg = Ack(4, block_n)
-                self.__socket.sendto(sendMsg.serializeMsg(),
-                                     (self.__ip, self.__port))
+                block_n = self.__n
+                sendMsg = msg_pb2.Mensagem()
+                sendMsg.ack.block_n = block_n
+                self.__socket.sendto(sendMsg.SerializeToString(), (self.__ip, self.__port))
                 self.__n += 1
                 self.__file.write(data)
                 self.__state = self.__handle_rx
         # Se Receber um ACK (Significa que é TX)
         #verificar agora o tipo de msg é ACK
-        if (msg.getOpcode() == 4):
+        if (msg.WhichOneof() == 'ack'):
             #ler msg.ack.block_n
-            ack_n = msg.getBuffer()[2:4]
-            #remover ?
-            ack_n = int.from_bytes(ack_n, 'big')
-            # caso tamano de msg.ack.block_n == 0
+            ack_n = msg.ack.block_n
+            #ack_n = int.from_bytes(ack_n, 'big')
+            # caso tamanho de msg.ack.block_n == 0
             if (ack_n == 0):
                 sentData = self.__file.read(512)
-                block_n = struct.pack(">H", self.__n)
-                dataMsg = Data(3, block_n, sentData)
-                self.__socket.sendto(dataMsg.serializeMsg(),
-                                     (self.__ip, self.__port))
+                block_n = self.__n
+                dataMsg = msg_pb2.Mensagem()
+                dataMsg.data.message = sentData
+                dataMsg.data.block_n = block_n
+                self.__socket.sendto(dataMsg.SerializeToString(), (self.__ip, self.__port))
                 self.__state = self.__handle_tx
 
     """Mudança de Estado para Recepção
@@ -161,74 +162,79 @@ class ClientTFTP(poller.Callback):
     @param msg: Messagem utilizadas durante a troca de messagem
     @param tout: verifcação de ocorrencia do timeout
     """
-
-    def __handle_rx(self, msg: Message):
+    def __handle_rx(self, msg ):
         # fazer decodificação de mensagem
         # Se for ERROR
         # verificar agora o tipo de msg se é Error e verificar enum recebido igual a 5
-        if (msg.getOpcode() == 5):
-            error = Error(5, msg.getBuffer()[3])
-            print(error.getErrorMsg())
+        if (msg.WhichOneof() == 'error'):
+            error = msg.errorcode
+            print(error)
             sys.exit()
 
         # Recebe Msg do socket
-        data = msg.getBuffer()[4:]
-        data_block_m = int.from_bytes(msg.getBuffer()[2:4], "big")
         # Se len do Data == 512, continua neste estado
         # envia Ack, incrementa n
-        if ((msg.getOpcode() == 3) and (len(data) == 512)):
-            # verificar se msg é DATA e setar block_n em msg.data 
-            block_n = struct.pack(">H", self.__n)
-            sendMsg = Ack(4, block_n)
-            self.__socket.sendto(sendMsg.serializeMsg(),
-                                 (self.__ip, self.__port))
-            self.__n += 1
-            self.__file.write(data)
-            self.__state = self.__handle_rx
-        elif (data_block_m != self.__n):
-            block_n = struct.pack(">H", data_block_m)
-            sendMsg = Ack(4, block_n)
-            self.__socket.sendto(sendMsg.serializeMsg(),
-                                 (self.__ip, self.__port))
-            self.__file.write(data)
-            self.__state = self.__handle_rx
-        elif ((msg.getOpcode() == 3) and (len(data) < 512)):
-            # verificar se msg é DATA e setar block_n em msg.data 
-            block_n = struct.pack(">H", self.__n)
-            sendMsg = Ack(4, block_n)
-            self.__socket.sendto(sendMsg.serializeMsg(),
-                                 (self.__ip, self.__port))
-            self.__file.write(data)
-            print("Transferencia Concluida")
-            self.__file.close()
-            sys.exit()
+        if ( (msg.WhichOneof() == 'data') ):
+            data = msg.data.message
+            data_block_m = msg.data.block_n
+            if((len(data) == 512)):
+                # verificar se msg é DATA e setar block_n em msg.data 
+                block_n = self.__n
+                sendMsg = msg_pb2.Mensagem()
+                sendMsg.ack.block_n = block_n
+                self.__socket.sendto(sendMsg.SerializeToString(), (self.__ip, self.__port))
+                self.__n += 1
+                self.__file.write(data)
+                self.__state = self.__handle_rx
+            elif (data_block_m != self.__n):
+                block_n = data_block_m
+                sendMsg = msg_pb2.Mensagem()
+                sendMsg.ack.block_n = block_n
+                self.__socket.sendto(sendMsg.SerializeToString(), (self.__ip, self.__port))
+                self.__file.write(data)
+                self.__state = self.__handle_rx
+            elif ( (len(data) < 512) ):
+                # verificar se msg é DATA e setar block_n em msg.data 
+                block_n = self.__n
+                sendMsg = msg_pb2.Mensagem()
+                sendMsg.ack.block_n = block_n
+                self.__socket.sendto(sendMsg.SerializeToString(), (self.__ip, self.__port))
+                self.__file.write(data)
+                print("Transferencia Concluida")
+                self.__file.close()
+                sys.exit()
 
     """Mudança de Estado para Transmissão
 
     @param msg: Messagem utilizadas durante a troca de messagem
     @param tout: verifcação de ocorrencia do timeout
     """
-
-    def __handle_tx(self, msg: Message):
+    def __handle_tx(self, msg ):
         # fazer decodificação de mensagem
-        ack_n = msg.getBuffer()[2:4]
-        ack_n = int.from_bytes(ack_n, "big")
+        if((msg.WhichOneof() == 'ack') ):
+            ack_n = msg.ack.block_n
+            #ack_n = int.from_bytes(ack_n, "big")
+        else:
+            print('Não é Ack, abortando transferencia')
+            sys.exit()
 
         if ((ack_n == self.__n) and (self.__n < (self.__max_n - 1))):
             self.__n += 1
             sendData = self.__file.read(512)
-            block_n = struct.pack(">H", self.__n)
-            dataMsg = Data(3, block_n, sendData)
-            self.__socket.sendto(dataMsg.serializeMsg(),
-                                 (self.__ip, self.__port))
+            block_n = self.__n
+            dataMsg = msg_pb2.Mensagem()
+            dataMsg.data.message = sendData
+            dataMsg.data.block_n = block_n
+            self.__socket.sendto(dataMsg.SerializeToString(), (self.__ip, self.__port))
             self.__state = self.__handle_tx
         elif (ack_n and (self.__n == (self.__max_n - 1))):
             self.__n += 1
             sendData = self.__file.read(512)
-            block_n = struct.pack(">H", self.__n)
-            dataMsg = Data(3, block_n, sendData)
-            self.__socket.sendto(dataMsg.serializeMsg(),
-                                 (self.__ip, self.__port))
+            block_n = self.__n
+            dataMsg = msg_pb2.Mensagem()
+            dataMsg.data.message = sendData
+            dataMsg.data.block_n = block_n
+            self.__socket.sendto(dataMsg.SerializeToString(), (self.__ip, self.__port))
             self.__state = self.__handle_end
 
     """Mudança de Estado para Fim
@@ -236,46 +242,44 @@ class ClientTFTP(poller.Callback):
     @param msg: Messagem utilizadas durante a troca de messagem
     @param tout: verifcação de ocorrencia do timeout
     """
-
-    def __handle_end(self, msg: Message):
+    def __handle_end(self, msg ):
         # deve-se fazer decodificação
         # Se for ERROR
         # verificar agora o tipo de msg se é Error e verificar enum recebido igual a 5
-        if (msg.getOpcode() == 5):
-            error = Error(5, msg.getBuffer()[3])
-            print(error.getErrorMsg())
+        if (msg.WhichOneof() == 'error'):
+            error = msg.errorcode
+            print(error)
             sys.exit()
-        # verificar agora o tipo de msg se é ACK 
-        if ((msg.getOpcode() == 3) and (len(msg.getBuffer()[4:]))):
-            # setar block_n em msg.data
-            block_n = struct.pack(">H", self.__n)
-            sendMsg = Ack(4, block_n)
-            self.__socket.sendto(sendMsg.serializeMsg(),
-                                 (self.__ip, self.__port))
+
+        if ((msg.WhichOneof() == 'data') and (len(msg.data.message))):
+            block_n = self.__n
+            sendMsg = msg_pb2.Mensagem()
+            sendMsg.ack.block_n = block_n
+            self.__socket.sendto(sendMsg.SerializeToString(), (self.__ip, self.__port))
             self.__file.close()
             sys.exit()
-        elif ((msg.getOpcode() == 4) and (msg.getBuffer() != None)):
-            # setar block_n em msg.ack
+        elif ((msg.WhichOneof() == 'ack') and (msg.ack.block_n() != None)):
             self.__n += 1
             sendData = self.__file.read(512)
-            block_n = struct.pack(">H", self.__n)
-            dataMsg = Data(3, block_n, sendData)
-            self.__socket.sendto(dataMsg.serializeMsg(),
-                                 (self.__ip, self.__port))
+            block_n = self.__n
+            dataMsg = msg_pb2.Mensagem()
+            dataMsg.data.message = sendData
+            dataMsg.data.block_n = block_n
+            self.__socket.sendto(dataMsg.SerializeToString(), (self.__ip, self.__port))
             sys.exit()
 
     def handle(self):
         # fazer decodificação de mensagem
 
-        data, (addr, port) = self.__socket.recvfrom(
-            516)  # 512 bytes + opcode + block
+        data, (addr, port) = self.__socket.recvfrom(516)  # 512 bytes + opcode + block
         self.__port = port
         # transformar data em objeto mensagem
         # verificar mensagem se é do tipo DATA e chamar SerializeToString
         if type(data) is bytes:
             print("Recebido Mensagem do " + str(addr) + ":" + str(port) + " = ")
             print(data)
-            recvMsg = Message(data)
+            recvMsg = msg_pb2.Mensagem()
+            recvMsg.ParseFromString(data)
         else:
             print("Mensagem recebida não esta em bytes: " + str(data))
             print("Abortanto execução do Cliente")
