@@ -47,11 +47,11 @@ class ClientTFTP(poller.Callback):
         self.__fname = fname
         msg.fname = fname
         if (mode.lower() == 'netascii'):
-            msg.mode = 1
+            msg.mode = msg_pb2.Mode.netascii
         elif (mode.lower() == 'octet'):
-            msg.mode = 2
+            msg.mode = msg_pb2.Mode.octet
         else:
-            msg.mode = 3
+            msg.mode = msg_pb2.Mode.mail
 
         # cria o arquivo para escrita de bytes
         self.__file = open("./" + self.__fname, "wb" )
@@ -81,11 +81,11 @@ class ClientTFTP(poller.Callback):
         self.__fname = fname
         msg.fname = fname
         if (mode.lower() == 'netascii'):
-            msg.mode = 1
+            msg.mode = msg_pb2.Mode.netascii
         elif (mode.lower() == 'octet'):
-            msg.mode = 2
+            msg.mode = msg_pb2.Mode.octet
         else:
-            msg.mode = 3
+            msg.mode = msg_pb2.Mode.mail
 
         # cria o arquivo para leitura de bytes
         self.__file = open("./" + self.__fname, "rb")
@@ -174,7 +174,7 @@ class ClientTFTP(poller.Callback):
     @param msg: Messagem utilizadas durante a troca de messagem
     @param tout: verifcação de ocorrencia do timeout
     """
-    def __handle_connect(self, msg ):
+    def __handle_connect(self, msg):
         # fazer decodificação de mensagem 
         # Se for ERROR
         #verificar agora o tipo de msg se é Error e verificar enum recebido igual a 5
@@ -227,9 +227,14 @@ class ClientTFTP(poller.Callback):
         if (msg.WhichOneof() == 'ListResponse'):
             resp = msg.list_resp.items
             if(resp.WhichOneof() == 'file'):
-                print()
+                print("File list")
+                for file in resp:
+                    print(file.nome + ", " + str(file.tamanho) + " bytes")
             else:
-                print()
+                print("Directory list")
+                for directory in resp:
+                    print(directory.nome)
+                
             sys.exit()
 
 
