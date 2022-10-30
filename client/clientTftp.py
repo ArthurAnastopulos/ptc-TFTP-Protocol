@@ -105,6 +105,70 @@ class ClientTFTP(poller.Callback):
         sched.adiciona(self)
         sched.despache()
 
+    def list(self, path: str):
+        m = msg_pb2.Mensagem()
+        msg = m.list
+        self.__listPath = path
+        msg.path = self.__listPath
+
+        
+        print('List')
+        print(msg.SerializeToString())
+        self.__socket.sendto(msg.SerializeToString(), (self.__ip, self.__port))
+
+        # Instancia Poller
+        self.enable()
+        self.enable_timeout()
+        sched = poller.Poller()
+
+        # Despache e mudança de estado
+        self.__state = self.__handle_connect
+        sched.adiciona(self)
+        sched.despache()
+
+    def mkdir(self, path:str):
+        m = msg_pb2.Mensagem()
+        msg = m.mkdir
+        self.__mkdirPath = path
+        msg.path = self.__mkdirPath
+
+        
+        print('Mkdir')
+        print(msg.SerializeToString())
+        self.__socket.sendto(msg.SerializeToString(), (self.__ip, self.__port))
+
+        # Instancia Poller
+        self.enable()
+        self.enable_timeout()
+        sched = poller.Poller()
+
+        # Despache e mudança de estado
+        self.__state = self.__handle_connect
+        sched.adiciona(self)
+        sched.despache()
+
+    def move(self, origName: str, newName: str):
+        m = msg_pb2.Mensagem()
+        msg = m.move
+        self.__origName = origName
+        self.__newName = newName
+        msg.nome_orig = self.__origName
+        msg.nome_novo = self.__newName
+
+        print('Move')
+        print(msg.SerializeToString())
+        self.__socket.sendto(msg.SerializeToString(), (self.__ip, self.__port))
+
+        # Instancia Poller
+        self.enable()
+        self.enable_timeout()
+        sched = poller.Poller()
+
+        # Despache e mudança de estado
+        self.__state = self.__handle_connect
+        sched.adiciona(self)
+        sched.despache()
+
     """Mudança de Estado para Conectando
 
     @param msg: Messagem utilizadas durante a troca de messagem
@@ -116,7 +180,10 @@ class ClientTFTP(poller.Callback):
         #verificar agora o tipo de msg se é Error e verificar enum recebido igual a 5
         if (msg.WhichOneof() == 'error'): 
             error = msg.errorcode
-            print(error)
+            if(error == 0):
+                print("Ação Executada com Sucesso.")
+            else:    
+                print(error)
             sys.exit()
 
         # Se Receber um DATA (Significa que é RX)
@@ -156,6 +223,15 @@ class ClientTFTP(poller.Callback):
                 dataMsg.data.block_n = block_n
                 self.__socket.sendto(dataMsg.SerializeToString(), (self.__ip, self.__port))
                 self.__state = self.__handle_tx
+
+        if (msg.WhichOneof() == 'ListResponse'):
+            resp = msg.list_resp.items
+            if(resp.WhichOneof() == 'file'):
+                print()
+            else:
+                print()
+            sys.exit()
+
 
     """Mudança de Estado para Recepção
 
