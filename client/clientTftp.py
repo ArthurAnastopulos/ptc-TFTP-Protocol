@@ -56,8 +56,8 @@ class ClientTFTP(poller.Callback):
         # cria o arquivo para escrita de bytes
         self.__file = open("./" + self.__fname, "wb" )
         print("Get")
-        print(msg.SerializeToString())
-        self.__socket.sendto(msg.SerializeToString(), (self.__ip, self.__port))
+        print(m.SerializeToString())
+        self.__socket.sendto(m.SerializeToString(), (self.__ip, self.__port))
 
         # Instancia Poller
         self.enable()
@@ -92,8 +92,8 @@ class ClientTFTP(poller.Callback):
         size = os.path.getsize("./" + self.__fname)
         self.__max_n = 1 + (size/512)  # Qtd de vezes q será feito a o enviado
         print("Put")
-        print(msg.SerializeToString())
-        self.__socket.sendto(msg.SerializeToString(), (self.__ip, self.__port))
+        print(m.SerializeToString())
+        self.__socket.sendto(m.SerializeToString(), (self.__ip, self.__port))
 
         # Instancia Poller
         self.enable()
@@ -113,8 +113,8 @@ class ClientTFTP(poller.Callback):
 
         
         print('List')
-        print(msg.SerializeToString())
-        self.__socket.sendto(msg.SerializeToString(), (self.__ip, self.__port))
+        print(m.SerializeToString())
+        self.__socket.sendto(m.SerializeToString(), (self.__ip, self.__port))
 
         # Instancia Poller
         self.enable()
@@ -134,8 +134,8 @@ class ClientTFTP(poller.Callback):
 
         
         print('Mkdir')
-        print(msg.SerializeToString())
-        self.__socket.sendto(msg.SerializeToString(), (self.__ip, self.__port))
+        print(m.SerializeToString())
+        self.__socket.sendto(m.SerializeToString(), (self.__ip, self.__port))
 
         # Instancia Poller
         self.enable()
@@ -156,8 +156,8 @@ class ClientTFTP(poller.Callback):
         msg.nome_novo = self.__newName
 
         print('Move')
-        print(msg.SerializeToString())
-        self.__socket.sendto(msg.SerializeToString(), (self.__ip, self.__port))
+        print(m.SerializeToString())
+        self.__socket.sendto(m.SerializeToString(), (self.__ip, self.__port))
 
         # Instancia Poller
         self.enable()
