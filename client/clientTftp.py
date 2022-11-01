@@ -1,15 +1,10 @@
-from enum import Enum
 import sys
-from client.message import Message
-from client.request import Request
-from client.data import Data
-from client.ack import Ack
-from client.error import Error
+
 from client.pypoller import poller
 from client.protobuf import msg_pb2
 from socket import *
 import os
-import struct
+
 
 class ClientTFTP(poller.Callback):
     """Construtor do Cliente TFTP
@@ -348,15 +343,17 @@ class ClientTFTP(poller.Callback):
     def handle(self):
         # fazer decodificação de mensagem
 
-        data, (addr, port) = self.__socket.recvfrom(516)  # 512 bytes + opcode + block
+        data, (addr, port) = self.__socket.recvfrom(522)  # 512 bytes + protobuf = 520
         self.__port = port
         # transformar data em objeto mensagem
         # verificar mensagem se é do tipo DATA e chamar SerializeToString
         if type(data) is bytes:
+            
             print("Recebido Mensagem do " + str(addr) + ":" + str(port) + " = ")
             print(data)
             recvMsg = msg_pb2.Mensagem()
-            recvMsg.ParseFromString(data)
+            recvMsg.ParseFromString(data) 
+              
         else:
             print("Mensagem recebida não esta em bytes: " + str(data))
             print("Abortanto execução do Cliente")
