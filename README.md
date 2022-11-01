@@ -17,103 +17,101 @@ O protocolo envia 8 tipos de mensagens, sendo elas RRQ,WRQ,DATA,ACK,ERROR,LIST,M
 Algumas transferências começam com um pedido de leitura ou escrita de um arquivo (WRQ, RRQ) e recebem uma resposta positiva, um pacote de confirmação a ser escrito ou o primeiro pacote a ser lido. Geralmente, o pacote de confirmação inclui o número do bloco do pacote de dados de confirmação. Cada pacote está associado a um número de bloco; os números de bloco são consecutivos e começam com 1. Como a resposta positiva a uma solicitação de gravação é um pacote de confirmação, o número do bloco pode ser zero nesse caso específico. Se a resposta for um pacote de erro, a solicitação será rejeitada.
 Para criar uma conexão, cada extremidade da conexão escolhe um TID para usar durante a conexão. Cada pacote possui dois TIDs associados aos endpoints da conexão, o TID de origem e o TID de destino. TID 69 decimal (105 octal) é usado para sua conexão.
 
+As novas requisições foram feitas de acordo essas especificações,abaixo.
 
+- LIST: fazer listagem de uma pasta. Seu formato deve ser: opcode (int 16 bits com valor 10), caminho (string)
+  - Resposta de LIST: contém a listagem da pasta. Seu formato é dado por opcode (int 16 bits com valor 11) e lista de 
+     Elementos. Cada Elemento é um valor de um destes dois tipos:
+    - Arquivo: representa um arquivo, e é formado por: nome (string), tamanho(int 32 bits)
+    - Pasta: representa uma pasta, sendo formado por: nome(string)
+  - Resposta de LIST pode também ser uma mensagem Error
+- MKDIR: cria uma pasta. Seu formato deve ser: opcode (int 16 bits com valor 12), caminho (string)
+  - Resposta de MKDIR: deve ser uma mensagem Error, com ErrorCode: 
+      - 0: se sucesso, e assim ErrMsg deve ser vazia
+      - demais valores: um código de erro, com ErrMsg contendo uma breve descrição
+- MOVE: renomeia ou remove arquivos. Seu formato deve ser: opcode (int 16 bits com valor 13), nome_original (string), novo_nome (string) 
+  - Se novo_nome for vazio, o arquivo deve ser removido
+  - Resposta de MOVE: deve ser uma mensagem Error, com ErrorCode:0: 
+    - se sucesso, e assim ErrMsg deve ser vazia
+    - demais valores: um código de erro, com ErrMsg contendo uma breve descrição
 ## Objetivos
 
 1. **Desenvolver uma biblioteca**: o cliente do protocolo TFTP deve ser feito na forma de uma biblioteca, de forma que possa ser reutilizado em aplicações que precisem desse protocolo.
-2. **Escrever um aplicativo demonstrativo**: usando sua biblioteca, deve-se criar um aplicativo capaz de enviar e receber arquivos usando o protocolo TFTP.
-3. **Codificar e dodificar mensagens**: usando uma tecnologia que possui um compilador, para não depender da linguagem de programação.
+2. **Escrever um aplicativo demonstrativo**: usando sua biblioteca, deve-se criar um aplicativo capaz de enviar ou receber arquivos,fazer listagem do contéudo de uma diretório ,criar um diretório e renomear ou remover arquivos usando o protocolo TFTP.
+3. **Codificar e dodificar mensagens**: usar a tecnologia [protobuf](https://developers.google.com/protocol-buffers/) que possui um compilador para uma codificação [especifica](/client/protobuf/msg.proto) de mensagem, para o protocolo não ser depende da linguagem de programação.
 
 ## Pré-requisitos
 
-1. Iniciar comunicação com o servidor de teste.
-```bash
-
-cd server
-
-./server/tftp_server . 6969
-
-```
-
-2. Instalar as dependências necessárias para a execução do projeto:
+1. Instalar as dependências necessárias para a execução do projeto:
 ```bash
 sudo apt update
 
 sudo apt install python3
 ```
 
-3. Caso deseje instalar o Docker para testes, como descrito em sua <a href="https://docs.docker.com/engine/install/ubuntu/">documentação</a>
 
-## Instruções para Uso
+# Instruções para Uso
 
-1. Utilizar métodos <a href="https://github.com/mmsobral-croom/projeto-1-um-protocolo-de-transferencia-de-arquivos-ptc-arthur-jefferson/blob/0e2dbf31fa336adbffae80e14a99b946f9ef97ed/client/clientTftp.py#L41">GET</a> , <a href="https://github.com/mmsobral-croom/projeto-1-um-protocolo-de-transferencia-de-arquivos-ptc-arthur-jefferson/blob/0e2dbf31fa336adbffae80e14a99b946f9ef97ed/client/clientTftp.py#L67">PUT</a>, LIST , MKDIR ou MOVE.
-
-- GET : python3 tests.py ``ip-do-servidor`` ``porta-servidor`` ``tempo-de-timeout`` ``1`` ``nome-do-arquivo``
+1. Abra um terminal e inicie a comunicação com o servidor de teste.
 ```bash
-python3 tests.py 127.0.0.1 6969 10 1 teste.txt 
-```
-- PUT (é necessário que o arquivo já exista no servidor para poder testar): python3 tests.py ``ip-do-servidor`` ``porta-servidor`` ``tempo-de-timeout`` ``2`` ``nome-do-arquivo``
-```bash
-python3 tests.py 127.0.0.1 6969 10 2 teste.txt 
-```
-- LIST : python3 tests.py ``ip-do-servidor`` ``porta-servidor`` ``tempo-de-timeout`` ``10`` ``caminho-do-diretório``
-```bash
-python3 tests.py 127.0.0.1 6969 10 10 /root/
-```
-- MKDIR : python3 tests.py ``ip-do-servidor`` ``porta-servidor`` ``tempo-de-timeout`` ``12`` ``caminho-do-diretório``
-```bash
-python3 tests.py 127.0.0.1 6969 12 2 /root/teste/
-```
-- MOVE : python3 tests.py ``ip-do-servidor`` ``porta-servidor`` ``tempo-de-timeout`` ``13`` ``nome-do-arquivo-original`` ``nome-do-arquivo-novo``
-```bash
-python3 tests.py 127.0.0.1 6969 13 2 teste.txt teste_renomeado.txt
-```
 
+./tftp_server $(pwd)/server 6969
 
-3. Instânciar um objeto do tipo ``ClienteTFTP`` onde o mesmo deve ser construído por meio de passagem de parâmetros de ``ip-do-servidor, porta-servidor, tempo-de-timeout e método`` e para o manejo do cliente é possível útilizar os métodos:
-- Parâmetro ``1`` para <a href="https://github.com/mmsobral-croom/projeto-1-um-protocolo-de-transferencia-de-arquivos-ptc-arthur-jefferson/blob/0e2dbf31fa336adbffae80e14a99b946f9ef97ed/client/clientTftp.py#L41">GET</a> requisição de leitura
-    - Use os seguintes handlers:
-        - handle : Para comunicação entre as classes poller e clientTftp por comunicação via socket para timeout.
-        - <a href="https://github.com/mmsobral-croom/projeto-1-um-protocolo-de-transferencia-de-arquivos-ptc-arthur-jefferson/blob/950a959a2c9e50cb3aa1e669779031bee22417a2/client/clientTftp.py#L245">handle_timeout</a> : Para determinação do tempo para mudança do estado ocioso para outro.
-        - <a href="https://github.com/mmsobral-croom/projeto-1-um-protocolo-de-transferencia-de-arquivos-ptc-arthur-jefferson/blob/950a959a2c9e50cb3aa1e669779031bee22417a2/client/clientTftp.py#L95">__handle_connect</a> : Para mudança de estado conectado da comunicação.
-        - <a href="https://github.com/mmsobral-croom/projeto-1-um-protocolo-de-transferencia-de-arquivos-ptc-arthur-jefferson/blob/950a959a2c9e50cb3aa1e669779031bee22417a2/client/clientTftp.py#L137">__handle_rx</a> : Para mudança de estado recebimento da comunicação. 
-        - <a href="https://github.com/mmsobral-croom/projeto-1-um-protocolo-de-transferencia-de-arquivos-ptc-arthur-jefferson/blob/950a959a2c9e50cb3aa1e669779031bee22417a2/client/clientTftp.py#L204">__handle_end</a> :Para mudança de estado encerramento da comunicação.
-- Parâmetro ``2`` para <a href="https://github.com/mmsobral-croom/projeto-1-um-protocolo-de-transferencia-de-arquivos-ptc-arthur-jefferson/blob/0e2dbf31fa336adbffae80e14a99b946f9ef97ed/client/clientTftp.py#L67">PUT</a> requisição de escrita em um arquivo 
-    - Use os seguintes handlers:
-        - handle : Para comunicação entre as classes poller e clientTftp por comunicação via socket para timeout.
-        - <a href="https://github.com/mmsobral-croom/projeto-1-um-protocolo-de-transferencia-de-arquivos-ptc-arthur-jefferson/blob/950a959a2c9e50cb3aa1e669779031bee22417a2/client/clientTftp.py#L245">handle_timeout</a> : Para determinação do tempo para mudança do estado ocioso para outro.
-        - <a href="https://github.com/mmsobral-croom/projeto-1-um-protocolo-de-transferencia-de-arquivos-ptc-arthur-jefferson/blob/950a959a2c9e50cb3aa1e669779031bee22417a2/client/clientTftp.py#L95">__handle_connect</a> : Para mudança de estado conectado da comunicação.
-        - <a href="https://github.com/mmsobral-croom/projeto-1-um-protocolo-de-transferencia-de-arquivos-ptc-arthur-jefferson/blob/950a959a2c9e50cb3aa1e669779031bee22417a2/client/clientTftp.py#L178">__handle_tx</a> : Para mudança de estado transmissão da comunicação.
-        - <a href="https://github.com/mmsobral-croom/projeto-1-um-protocolo-de-transferencia-de-arquivos-ptc-arthur-jefferson/blob/950a959a2c9e50cb3aa1e669779031bee22417a2/client/clientTftp.py#L204">__handle_end</a> :Para mudança de estado encerramento da comunicação.
+```
+2. Abra um terminal e utilize alguma requisição GET, PUT, LIST , MKDIR ou MOVE.
 
-- Parâmetro ``10`` para LIST requisição de contéudo por um caminho no servidor.
+    - GET : python3 tests.py ``ip-do-servidor`` ``porta-servidor`` ``tempo-de-timeout`` ``1`` ``nome-do-arquivo``
+    ```bash
+    python3 tests.py 127.0.0.1 6969 10 1 teste.txt 
+    ```
+    - PUT (é necessário que o arquivo já exista no servidor para poder testar): python3 tests.py ``ip-do-servidor`` ``porta-servidor`` ``tempo-de-timeout`` ``2`` ``nome-do-arquivo``
+    ```bash
+    python3 tests.py 127.0.0.1 6969 10 2 teste.txt 
+    ```
+    - LIST : python3 tests.py ``ip-do-servidor`` ``porta-servidor`` ``tempo-de-timeout`` ``10`` ``caminho-do-diretório``
+    ```bash
+    python3 tests.py 127.0.0.1 6969 10 10 /root/
+    ```
+    - MKDIR : python3 tests.py ``ip-do-servidor`` ``porta-servidor`` ``tempo-de-timeout`` ``12`` ``caminho-do-diretório``
+    ```bash
+    python3 tests.py 127.0.0.1 6969 10 12 /root/teste/
+    ```
+    - MOVE : python3 tests.py ``ip-do-servidor`` ``porta-servidor`` ``tempo-de-timeout`` ``13`` ``nome-do-arquivo-original`` ``nome-do-arquivo-novo``
+    ```bash
+    python3 tests.py 127.0.0.1 6969 10 13 teste.txt teste_renomeado.txt
+    ```
+
+# Lógica de uso das requisições
+Instânciar um objeto do tipo ``ClienteTFTP`` onde o mesmo deve ser construído por meio de passagem de parâmetros de ``ip-do-servidor, porta-servidor, tempo-de-timeout e método`` e para o manejo do cliente é possível útilizar os métodos:
+- Para GET requisição de leitura
+- Para PUT requisição de escrita em um arquivo 
+- Para LIST requisição listagem de contéudo por um caminho no servidor. 
+- Para MKDIR requisição de  escrita de um diretório por um caminho. 
+- Para MOVE requisição de renomear ou excluir arquivo para.
     - Use os seguintes handlers:
         - handle : Para comunicação entre as classes poller e clientTftp por comunicação via socket para timeout.
         - handle_timeout : Para determinação do tempo para mudança do estado ocioso para outro.
-        - __handle_connect : Para mudança de estado conectado da comunicação, onde será de codificado a mensagem para poder listar os arquivos ou diretórios encontrados pelo ``path`` passado por parâmetro.
-        - __handle_tx: Para mudança de estado transmissão da comunicação.
+        - __handle_connect: Para mudança de estado conectado da comunicação.
+        - __handle_rx : Para mudança de estado recebimento da comunicação. 
+        - __handle_tx : Para mudança de estado transmissão da comunicação. 
         - __handle_end :Para mudança de estado encerramento da comunicação.
-- Parâmetro ``12`` para MKDIR requisição de contéudo por um caminho no servidor.
-    - Use os seguintes handlers:
-        - handle : Para comunicação entre as classes poller e clientTftp por comunicação via socket para timeout.
-        - handle_timeout : Para determinação do tempo para mudança do estado ocioso para outro.
-        - __handle_connect : Para mudança de estado conectado da comunicação.
-        - __handle_tx: Para mudança de estado transmissão da comunicação.
-        - __handle_end :Para mudança de estado encerramento da comunicação.
-- Parâmetro ``13`` para LIST requisição de contéudo por um caminho no servidor.
-    - Use os seguintes handlers:
-        - handle : Para comunicação entre as classes poller e clientTftp por comunicação via socket para timeout.
-        - handle_timeout : Para determinação do tempo para mudança do estado ocioso para outro.
-        - __handle_connect : Para mudança de estado conectado da comunicação.
-        - __handle_tx: Para mudança de estado transmissão da comunicação.
-        - __handle_end :Para mudança de estado encerramento da comunicação.        
+          
+
+# Video instrução de uso TFTP 2.0
+
+<p align='center'><video width="320" height="240" controls>
+  <source src="" type="video/mp4">
+Your browser does not support the video tag.
+</video></p>
 
 
-
-
-## Máquina de Estado Finita do Protocolo TFTP
+# Máquina de Estado Finita do Protocolo TFTP 2.0
 
 <img align='center' src="images/state_machine_TFTP.png" width="850px;" alt=""></img>
+
+# Diagrama UML do Protocolo TFTP 2.0
+
+<p align='center'><img align='center' src="images/uml-projeto-1.drawio.png" alt=""></img></p>
 
 ## Autores
 
