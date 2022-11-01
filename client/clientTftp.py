@@ -120,7 +120,7 @@ class ClientTFTP(poller.Callback):
         sched = poller.Poller()
 
         # Despache e mudança de estado
-        self.__state = self.__handle_connect
+        self.__state = self.__handle_connect_new
         sched.adiciona(self)
         sched.despache()
 
@@ -144,7 +144,7 @@ class ClientTFTP(poller.Callback):
         sched = poller.Poller()
 
         # Despache e mudança de estado
-        self.__state = self.__handle_connect
+        self.__state = self.__handle_connect_new
         sched.adiciona(self)
         sched.despache()
 
@@ -170,7 +170,7 @@ class ClientTFTP(poller.Callback):
         sched = poller.Poller()
 
         # Despache e mudança de estado
-        self.__state = self.__handle_connect
+        self.__state = self.__handle_connect_new
         sched.adiciona(self)
         sched.despache()
 
@@ -229,12 +229,30 @@ class ClientTFTP(poller.Callback):
                 self.__socket.sendto(dataMsg.SerializeToString(), (self.__ip, self.__port))
                 self.__state = self.__handle_tx
 
+    """Mudança de Estado para Conectando para Novas Mensagens TFTP. 
+        Obs: Criado com inuito de diferenciar o ACK do WRQ do ACK do MKDIR
+
+    @param msg: Messagem utilizadas durante a troca de messagem
+    """
+    def __handle_connect_new(self, msg):
+        # fazer decodificação de mensagem 
+        # Se for ERROR
+        #verificar agora o tipo de msg se é Error
+        if (msg.WhichOneof('msg') == 'error'):
+            error = msg.error.errorcode
+            print(self.ErrorMsg(error))   
+            sys.exit()
+
+        # Se for ACK, Houve Sucesso
+        # Então fecha o programa.
+        if (msg.WhichOneof('msg') == 'ack'):
+            sys.exit();
+
         if (msg.WhichOneof('msg') == 'list_resp'):
             resp = msg.list_resp.items
             for item in resp:
                 print("Item a ser Listado: ", item)
             sys.exit()
-
 
     """Mudança de Estado para Recepção
 
