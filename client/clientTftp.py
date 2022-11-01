@@ -1,3 +1,4 @@
+from cgi import print_form, test
 import sys
 
 from client.pypoller import poller
@@ -46,11 +47,11 @@ class ClientTFTP(poller.Callback):
             msg.mode = msg_pb2.Mode.octet
         else:
             msg.mode = msg_pb2.Mode.mail
-
+        
+        self.__n = 1
         # cria o arquivo para escrita de bytes
         self.__file = open("./" + self.__fname, "wb" )
-        print("Get")
-        print(m.SerializeToString())
+        print("Mensagem Get = ", m.SerializeToString())
         self.__socket.sendto(m.SerializeToString(), (self.__ip, self.__port))
 
         # Instancia Poller
@@ -80,13 +81,13 @@ class ClientTFTP(poller.Callback):
             msg.mode = msg_pb2.Mode.octet
         else:
             msg.mode = msg_pb2.Mode.mail
-
+        
+        self.__n = 1
         # cria o arquivo para leitura de bytes
         self.__file = open("./" + self.__fname, "rb")
         size = os.path.getsize("./" + self.__fname)
         self.__max_n = 1 + (size/512)  # Qtd de vezes q será feito a o enviado
-        print("Put")
-        print(m.SerializeToString())
+        print("Mensagem Put = ", m.SerializeToString())
         self.__socket.sendto(m.SerializeToString(), (self.__ip, self.__port))
 
         # Instancia Poller
@@ -99,6 +100,10 @@ class ClientTFTP(poller.Callback):
         sched.adiciona(self)
         sched.despache()
 
+    """Requisição de listagem de Diretorios e Arquivos do TFTP 2.0
+
+    @param path: Caminho do Arquivo
+    """
     def list(self, path: str):
         m = msg_pb2.Mensagem()
         msg = m.list
@@ -106,8 +111,7 @@ class ClientTFTP(poller.Callback):
         msg.path = self.__listPath
 
         
-        print('List')
-        print(m.SerializeToString())
+        print("Mensagem List = ", m.SerializeToString())
         self.__socket.sendto(m.SerializeToString(), (self.__ip, self.__port))
 
         # Instancia Poller
@@ -120,6 +124,10 @@ class ClientTFTP(poller.Callback):
         sched.adiciona(self)
         sched.despache()
 
+    """Requisição para criar de Diretorios do TFTP 2.0
+
+    @param path: Caminho do Arquivo
+    """
     def mkdir(self, path:str):
         m = msg_pb2.Mensagem()
         msg = m.mkdir
@@ -127,8 +135,7 @@ class ClientTFTP(poller.Callback):
         msg.path = self.__mkdirPath
 
         
-        print('Mkdir')
-        print(m.SerializeToString())
+        print("Mensagem Mkdir = ", m.SerializeToString())
         self.__socket.sendto(m.SerializeToString(), (self.__ip, self.__port))
 
         # Instancia Poller
@@ -141,6 +148,11 @@ class ClientTFTP(poller.Callback):
         sched.adiciona(self)
         sched.despache()
 
+    """Requisição para renomar Arquivos do TFTP 2.0
+
+    @param origName: Nome original do Arquivo
+    @param newName: Novo nome do Arquivo
+    """
     def move(self, origName: str, newName: str):
         m = msg_pb2.Mensagem()
         msg = m.move
@@ -149,8 +161,7 @@ class ClientTFTP(poller.Callback):
         msg.nome_orig = self.__origName
         msg.nome_novo = self.__newName
 
-        print('Move')
-        print(m.SerializeToString())
+        print("Mensagem Move = ", m.SerializeToString())
         self.__socket.sendto(m.SerializeToString(), (self.__ip, self.__port))
 
         # Instancia Poller
@@ -166,13 +177,12 @@ class ClientTFTP(poller.Callback):
     """Mudança de Estado para Conectando
 
     @param msg: Messagem utilizadas durante a troca de messagem
-    @param tout: verifcação de ocorrencia do timeout
     """
     def __handle_connect(self, msg):
         # fazer decodificação de mensagem 
         # Se for ERROR
         #verificar agora o tipo de msg se é Error
-        if (msg.WhichOneof('msg') == 'error'): 
+        if (msg.WhichOneof('msg') == 'error'):
             error = msg.error.errorcode
             print(self.ErrorMsg(error))   
             sys.exit()
@@ -186,6 +196,7 @@ class ClientTFTP(poller.Callback):
                 block_n = self.__n
                 sendMsg = msg_pb2.Mensagem()
                 sendMsg.ack.block_n = block_n
+                print('Ack = ', sendMsg.SerializeToString())
                 self.__socket.sendto(sendMsg.SerializeToString(), (self.__ip, self.__port))
                 # do Byte 4 em diante é o Data do arquivo
                 self.__file.write(data)
@@ -195,6 +206,7 @@ class ClientTFTP(poller.Callback):
                 block_n = self.__n
                 sendMsg = msg_pb2.Mensagem()
                 sendMsg.ack.block_n = block_n
+                print('Ack = ', sendMsg.SerializeToString())
                 self.__socket.sendto(sendMsg.SerializeToString(), (self.__ip, self.__port))
                 self.__n += 1
                 self.__file.write(data)
@@ -202,6 +214,7 @@ class ClientTFTP(poller.Callback):
         # Se Receber um ACK (Significa que é TX)
         #verificar agora o tipo de msg é ACK
         if (msg.WhichOneof('msg') == 'ack'):
+            print("ACK")
             #ler msg.ack.block_n
             ack_n = msg.ack.block_n
             #ack_n = int.from_bytes(ack_n, 'big')
@@ -212,34 +225,27 @@ class ClientTFTP(poller.Callback):
                 dataMsg = msg_pb2.Mensagem()
                 dataMsg.data.message = sentData
                 dataMsg.data.block_n = block_n
+                print('Data = ', dataMsg.SerializeToString())
                 self.__socket.sendto(dataMsg.SerializeToString(), (self.__ip, self.__port))
                 self.__state = self.__handle_tx
 
-        if (msg.WhichOneof('msg') == 'ListResponse'):
+        if (msg.WhichOneof('msg') == 'list_resp'):
             resp = msg.list_resp.items
-            if(resp.WhichOneof('answer') == 'file'):
-                print("File list")
-                for file in resp:
-                    print(file.nome + ", " + str(file.tamanho) + " bytes")
-            else:
-                print("Directory list")
-                for directory in resp:
-                    print(directory.nome)
-                
+            for item in resp:
+                print("Item a ser Listado: ", item)
             sys.exit()
 
 
     """Mudança de Estado para Recepção
 
     @param msg: Messagem utilizadas durante a troca de messagem
-    @param tout: verifcação de ocorrencia do timeout
     """
     def __handle_rx(self, msg ):
         # fazer decodificação de mensagem
         # Se for ERROR
         # verificar agora o tipo de msg se é Error e verificar enum recebido igual a 5
         if (msg.WhichOneof('msg') == 'error'):
-            error = msg.errorcode
+            error = msg.error.errorcode
             print(self.ErrorMsg(error))
             sys.exit()
 
@@ -254,6 +260,7 @@ class ClientTFTP(poller.Callback):
                 block_n = self.__n
                 sendMsg = msg_pb2.Mensagem()
                 sendMsg.ack.block_n = block_n
+                print('Ack = ', sendMsg.SerializeToString())
                 self.__socket.sendto(sendMsg.SerializeToString(), (self.__ip, self.__port))
                 self.__n += 1
                 self.__file.write(data)
@@ -262,6 +269,7 @@ class ClientTFTP(poller.Callback):
                 block_n = data_block_m
                 sendMsg = msg_pb2.Mensagem()
                 sendMsg.ack.block_n = block_n
+                print('Ack = ', sendMsg.SerializeToString())
                 self.__socket.sendto(sendMsg.SerializeToString(), (self.__ip, self.__port))
                 self.__file.write(data)
                 self.__state = self.__handle_rx
@@ -270,6 +278,7 @@ class ClientTFTP(poller.Callback):
                 block_n = self.__n
                 sendMsg = msg_pb2.Mensagem()
                 sendMsg.ack.block_n = block_n
+                print('Ack = ', sendMsg.SerializeToString())
                 self.__socket.sendto(sendMsg.SerializeToString(), (self.__ip, self.__port))
                 self.__file.write(data)
                 print("Transferencia Concluida")
@@ -279,7 +288,6 @@ class ClientTFTP(poller.Callback):
     """Mudança de Estado para Transmissão
 
     @param msg: Messagem utilizadas durante a troca de messagem
-    @param tout: verifcação de ocorrencia do timeout
     """
     def __handle_tx(self, msg ):
         # fazer decodificação de mensagem
@@ -297,6 +305,7 @@ class ClientTFTP(poller.Callback):
             dataMsg = msg_pb2.Mensagem()
             dataMsg.data.message = sendData
             dataMsg.data.block_n = block_n
+            print('Data = ', dataMsg.SerializeToString())
             self.__socket.sendto(dataMsg.SerializeToString(), (self.__ip, self.__port))
             self.__state = self.__handle_tx
         elif (ack_n and (self.__n == (self.__max_n - 1))):
@@ -306,20 +315,20 @@ class ClientTFTP(poller.Callback):
             dataMsg = msg_pb2.Mensagem()
             dataMsg.data.message = sendData
             dataMsg.data.block_n = block_n
+            print('Data = ', dataMsg.SerializeToString())
             self.__socket.sendto(dataMsg.SerializeToString(), (self.__ip, self.__port))
             self.__state = self.__handle_end
 
     """Mudança de Estado para Fim
 
     @param msg: Messagem utilizadas durante a troca de messagem
-    @param tout: verifcação de ocorrencia do timeout
     """
     def __handle_end(self, msg ):
         # deve-se fazer decodificação
         # Se for ERROR
         # verificar agora o tipo de msg se é Error e verificar enum recebido igual a 5
         if (msg.WhichOneof('msg') == 'error'):
-            error = msg.errorcode
+            error = msg.error.errorcode
             print(self.ErrorMsg(error))
             sys.exit()
 
@@ -327,6 +336,7 @@ class ClientTFTP(poller.Callback):
             block_n = self.__n
             sendMsg = msg_pb2.Mensagem()
             sendMsg.ack.block_n = block_n
+            print('Ack = ', sendMsg.SerializeToString())
             self.__socket.sendto(sendMsg.SerializeToString(), (self.__ip, self.__port))
             self.__file.close()
             sys.exit()
@@ -337,20 +347,20 @@ class ClientTFTP(poller.Callback):
             dataMsg = msg_pb2.Mensagem()
             dataMsg.data.message = sendData
             dataMsg.data.block_n = block_n
+            print('Data = ', dataMsg.SerializeToString())
             self.__socket.sendto(dataMsg.SerializeToString(), (self.__ip, self.__port))
             sys.exit()
 
     def handle(self):
         # fazer decodificação de mensagem
 
-        data, (addr, port) = self.__socket.recvfrom(522)  # 512 bytes + protobuf = 520
+        data, (addr, port) = self.__socket.recvfrom(1024)
         self.__port = port
         # transformar data em objeto mensagem
         # verificar mensagem se é do tipo DATA e chamar SerializeToString
         if type(data) is bytes:
             
-            print("Recebido Mensagem do " + str(addr) + ":" + str(port) + " = ")
-            print(data)
+            print("Recebido Mensagem do " + str(addr) + ":" + str(port) + " = ", data)
             recvMsg = msg_pb2.Mensagem()
             recvMsg.ParseFromString(data) 
               
@@ -368,9 +378,13 @@ class ClientTFTP(poller.Callback):
         self.disable()
         # maquina de estado passar para ociso
 
+    """Retorna uma Mensagem de Erro, apartir de seu código
+
+    @param code: Código da Messagem de Erro utilizadas na troca de mensagens
+    """    
     def ErrorMsg(self, code:int):
         if code == 0:
-            return "Success."
+            return "" #Sucesso
         if code == 1:
             return "File not found."
         if code == 2:
